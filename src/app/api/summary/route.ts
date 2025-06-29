@@ -1,5 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Extract system prompt for maintainability
+const SYSTEM_PROMPT = `You are a friendly financial mentor explaining news to someone new to finance. Create a structured summary with the following format:
+
+## Key Points
+• [3-5 bullet points covering the main facts]
+
+## What Happened
+[One clear paragraph explaining the core event]
+
+## Why It Matters
+[1-2 sentences explaining the significance and impact]
+
+## What's Next
+[1-2 sentences about future implications or next steps]
+
+Use **bold text** for important terms and numbers. Include **one simple analogy** where helpful (e.g., "like borrowing a book from the library"). **Define any technical terms** parenthetically (e.g., "dividends (company profits paid to shareholders)").
+
+Keep the total around **200-250 words** and focus on making complex financial concepts accessible to beginners while maintaining accuracy.`;
+
 export async function POST(request: NextRequest) {
   try {
     console.log('=== Summary API called ===');
@@ -9,10 +28,11 @@ export async function POST(request: NextRequest) {
     
     const { url } = body;
 
-    if (!url) {
-      console.log('Error: No URL provided');
+    // Improved input validation
+    if (!url || typeof url !== 'string') {
+      console.log('Error: No valid URL provided');
       return NextResponse.json(
-        { error: 'URL is required' },
+        { error: 'Valid URL is required' },
         { status: 400 }
       );
     }
@@ -35,10 +55,12 @@ export async function POST(request: NextRequest) {
     let articleContent = '';
     
     try {
+      // Add timeout to prevent hanging requests
       const pageResponse = await fetch(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)',
         },
+        signal: AbortSignal.timeout(10000), // 10 second timeout
       });
       
       if (!pageResponse.ok) {
@@ -62,7 +84,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 2: Summarize with OpenAI using enhanced prompt
+    // Step 2: Summarize with OpenAI using extracted prompt
     console.log('Sending to OpenAI for summarization...');
     
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -76,31 +98,15 @@ export async function POST(request: NextRequest) {
         messages: [
           {
             role: 'system',
-            content: `You are a friendly financial mentor explaining news to someone new to finance. Create a structured summary with the following format:
-
-                      ## Key Points
-                      • [3-5 bullet points covering the main facts]
-
-                      ## What Happened
-                      [One clear sentence explaining the core event]
-
-                      ## Why It Matters
-                      [One sentence explaining the significance and impact]
-
-                      ## What's Next
-                      [One sentence about future implications or next steps]
-
-                      Use **bold text** for important terms and numbers. Include **one simple analogy** where helpful (e.g., "like borrowing a book from the library"). **Define any technical terms** parenthetically (e.g., "dividends (company profits paid to shareholders)").
-
-                      Keep the total around **200-250 words** and focus on making complex financial concepts accessible to beginners while maintaining accuracy.`
+            content: SYSTEM_PROMPT
           },
           {
             role: 'user',
             content: `Please summarize this financial news article using the structured format above:\n\n${articleContent.substring(0, 4000)}`
           }
         ],
-        max_tokens: 350, // Increased to accommodate 200-250 word target
-        temperature: 0.4, // Slightly higher for more natural analogies while maintaining consistency
+        max_tokens: 350,
+        temperature: 0.4,
       }),
     });
 
@@ -130,7 +136,7 @@ export async function POST(request: NextRequest) {
       summary: summary.trim(),
       url: url,
       contentLength: articleContent.length,
-      sentenceCount: sentences.length // Added for debugging/validation
+      sentenceCount: sentences.length
     });
 
   } catch (error) {
