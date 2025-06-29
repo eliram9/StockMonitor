@@ -11,7 +11,11 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en" suppressHydrationWarning> {/* ADD THIS */}
+        <html lang="en" suppressHydrationWarning>
+            <head>
+                <title>StockMonitor</title>
+                <meta name="description" content="Monitor your favorite stocks with real-time data and analytics" />
+            </head>
             <body>
                 <ThemeProvider 
                     attribute="class" 
