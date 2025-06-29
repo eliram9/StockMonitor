@@ -1,26 +1,239 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Custom theme configuration for Tailwind v4 */
+@theme {
+    /* Primary colors */
+    --color-primary-50: #eff6ff;
+    --color-primary-500: #3b82f6;
+    --color-primary-600: #2563eb;
+    --color-primary-700: #1d4ed8;
+    
+    /* Blue colors for gradients */
+    --color-blue-50: #eff6ff;
+    --color-blue-100: #dbeafe;
+    --color-blue-200: #bfdbfe;
+    --color-blue-400: #60a5fa;
+    --color-blue-500: #3b82f6;
+    
+    /* Red colors for gradients */
+    --color-red-50: #fef2f2;
+    --color-red-100: #fee2e2;
+    --color-red-200: #fecaca;
+    --color-red-400: #f87171;
+    --color-red-500: #ef4444;
+    
+    /* Indigo colors for gradients */
+    --color-indigo-50: #eef2ff;
+    --color-indigo-100: #e0e7ff;
+    --color-indigo-200: #c7d2fe;
+    --color-indigo-400: #818cf8;
+    --color-indigo-500: #6366f1;
+    
+    /* Success colors */
+    --color-success-50: #f0fdf4;
+    --color-success-500: #22c55e;
+    --color-success-600: #16a34a;
+    
+    /* Danger colors */
+    --color-danger-50: #fef2f2;
+    --color-danger-500: #ef4444;
+    --color-danger-600: #dc2626;
+
+    /* Dark mode configuration */
+    --dark-mode: class;
+
+    /* Light mode colors */
+    --color-white: #ffffff;
+    --color-gray-50: #f9fafb;
+    --color-gray-100: #f3f4f6;
+    --color-gray-200: #e5e7eb;
+    --color-gray-400: #a8b2bd;
+    --color-gray-600: #4b5563;
+    --color-gray-700: #374151;
+    --color-gray-800: #1f2937;
+    --color-gray-900: #111827;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Global styles */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
+
+/* Gradient backgrounds */
+.bg-gradient-to-br {
+    background-image: linear-gradient(to bottom right, var(--tw-gradient-from), var(--tw-gradient-to));
+}
+
+.from-blue-50 {
+    --tw-gradient-from: var(--color-blue-50);
+    --tw-gradient-to: rgba(239, 246, 255, 0);
+}
+
+.to-red-400 {
+    --tw-gradient-to: var(--color-red-400);
+}
+
+.to-indigo-100 {
+    --tw-gradient-to: var(--color-indigo-100);
+}
+
+/* Dark mode gradient variants */
+.dark .from-blue-50 {
+    --tw-gradient-from: #18223f; /* Dark blue equivalent */
+    --tw-gradient-to: rgba(30, 58, 138, 0);
+}
+
+.dark .to-red-400 {
+    --tw-gradient-to: #dc2626; /* Darker red for dark mode */
+}
+
+.dark .to-indigo-100 {
+    --tw-gradient-to: #090824; /* Dark indigo equivalent */
+}
+
+/* Manual dark mode classes - this is how you control colors in Tailwind v4 */
+.bg-white {
+    background-color: var(--color-white);
+}
+
+.dark .bg-white {
+    background-color: var(--color-gray-800);
+}
+
+.bg-gray-50 {
+    background-color: var(--color-gray-50);
+}
+
+.dark .bg-gray-50 {
+    background-color: var(--color-gray-700);
+}
+
+.bg-gray-100 {
+    background-color: var(--color-gray-100);
+}
+
+.dark .bg-gray-100 {
+    background-color: var(--color-gray-600);
+}
+
+.text-gray-900 {
+    color: var(--color-gray-900);
+}
+
+.dark .text-gray-900 {
+    color: var(--color-white);
+}
+
+.text-gray-800 {
+    color: var(--color-gray-800);
+}
+
+.dark .text-gray-800 {
+    color: var(--color-gray-100);
+}
+
+.text-gray-600 {
+    color: var(--color-gray-600);
+}
+
+.dark .text-gray-600 {
+    color: var(--color-gray-300);
+}
+
+.text-gray-500 {
+    color: var(--color-gray-600);
+}
+
+.dark .text-gray-500 {
+    color: var(--color-gray-400);
+}
+
+.border-gray-200 {
+    border-color: var(--color-gray-200);
+}
+
+.dark .border-gray-200 {
+    border-color: var(--color-gray-600);
+}
+
+/* Success colors for stock cards */
+.bg-success-50 {
+    background-color: var(--color-success-50);
+}
+
+.dark .bg-success-50 {
+    background-color: #064e3b; /* Dark green background */
+}
+
+.border-success-500 {
+    border-color: var(--color-success-500);
+}
+
+.dark .border-success-500 {
+    border-color: #22c55e; /* Keep green border in dark mode */
+}
+
+.text-success-600 {
+    color: var(--color-success-600);
+}
+
+.dark .text-success-600 {
+    color: #4ade80; /* Lighter green text in dark mode */
+}
+
+/* Danger colors for stock cards */
+.bg-danger-50 {
+    background-color: var(--color-danger-50);
+}
+
+.dark .bg-danger-50 {
+    background-color: #7f1d1d; /* Dark red background */
+}
+
+.border-danger-500 {
+    border-color: var(--color-danger-500);
+}
+
+.dark .border-danger-500 {
+    border-color: #ef4444; /* Keep red border in dark mode */
+}
+
+.text-danger-600 {
+    color: var(--color-danger-600);
+}
+
+.dark .text-danger-600 {
+    color: #f87171; /* Lighter red text in dark mode */
+}
+
+/* Smooth transitions */
+* {
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* News card */
+.bg-ai-button {
+    background-color: #1f2937; /* Default */
+}
+
+.dark .bg-ai-button {
+    background-color: var(--color-gray-900);
+}
+
+.dark .bg-ai-button:hover {
+    background-color: var(--color-gray-600);
+}
+
+/* End News card */
+
+
+.modal-text {
+    color: var(--color-gray-900);
+}
+
+.dark .modal-text {
+    color: var(--color-gray-400);
+}
+
+
+/* End Modal */
