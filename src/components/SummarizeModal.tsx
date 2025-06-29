@@ -161,9 +161,11 @@ export function SummarizeModal({ isOpen, onClose, headline, ticker, url, icon }:
                 }
                 
                 return (
-                    <h3 key={index} className={headerClasses[section.level || 1]}>
-                        {section.content}
-                    </h3>
+                    <div key={index} className="pt-6">
+                        <h3 className={headerClasses[section.level || 1]}>
+                            {section.content}
+                        </h3>
+                    </div>
                 );
             
             case 'paragraph':
@@ -332,7 +334,7 @@ export function SummarizeModal({ isOpen, onClose, headline, ticker, url, icon }:
                                         else if (section.type === 'header' && inKeyPointsSection) {
                                             // Render the Key Points section with all its items
                                             elements.push(
-                                                <div key="keypoints-section" className="bg-gray-100 p-2 rounded-lg mb-3">
+                                                <div key="keypoints-section" className="bg-gray-100 px-2 py-4 rounded-lg mb-3">
                                                     <h3 className="text-lg font-semibold text-gray-800 mb-2 pb-2">
                                                         Key Points
                                                     </h3>
@@ -350,21 +352,6 @@ export function SummarizeModal({ isOpen, onClose, headline, ticker, url, icon }:
                                             elements.push(renderContentSection(section, index));
                                         }
                                     });
-                                    
-                                    // If we're still in Key Points section at the end, render it
-                                    if (inKeyPointsSection && keyPointsItems.length > 0) {
-                                        elements.push(
-                                            <div key="keypoints-section" className="bg-gray-100 p-2 rounded-lg mb-3">
-                                                <h3 className="text-lg font-semibold text-gray-800 mb-2 pb-2">
-                                                    Key Points
-                                                </h3>
-                                                <div className="space-y-1">
-                                                    {keyPointsItems}
-                                                </div>
-                                            </div>
-                                        );
-                                    }
-                                    
                                     return elements;
                                 })()}
                             </div>
@@ -373,7 +360,7 @@ export function SummarizeModal({ isOpen, onClose, headline, ticker, url, icon }:
                 </div>
 
                 {/* Footer */}
-                <div className="p-6">
+                <div className="px-6 pb-6">
                     <div className="px-6 border-t border-gray-400 mb-6"></div>
                     <div className="flex justify-end">
                         <button
