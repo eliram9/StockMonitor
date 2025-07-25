@@ -32,3 +32,11 @@ Stock Monitor is a real-time stock tracking tool that integrates live price upda
 	•	Apollo Client
 	•	next-themes
 	•	NYSE Holidays
+
+
+## 🍻 Special Thanks to my Dream Team 🥇!
+ChatGPT - Prompts & brainstorming magic
+ClaudeCode with Cursor - Batman & Robin
+Grok - Squashing those bugs!
+
+Couldn’t have done it without you all
