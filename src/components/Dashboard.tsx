@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useMemo, useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { useStocks } from '@/lib/hooks/useStocks';
 import { StockCard } from './StockCard';
 import { BenzingaNews } from './BenzingaNews';
@@ -181,12 +181,12 @@ export function Dashboard() {
   }, [refetch]);
 
   // Memoized market info data
-  const marketInfoData = useMemo(() => [
-    { label: 'Data Source', value: MARKET_CONFIG.API.DATA_SOURCE },
-    { label: 'Market Hours', value: 'Mon-Fri: 09:30 - 16:30 ET' },
-    { label: 'Update Strategy', value: isMarketOpen ? 'Live (1 min)' : 'Cached closing data' },
-    { label: 'Current Status', value: isMarketOpen ? 'Live Trading' : 'Market Closed' },
-  ], [isMarketOpen]);
+  // const marketInfoData = useMemo(() => [
+  //   { label: 'Data Source', value: MARKET_CONFIG.API.DATA_SOURCE },
+  //   { label: 'Market Hours', value: 'Mon-Fri: 09:30 - 16:30 ET' },
+  //   { label: 'Update Strategy', value: isMarketOpen ? 'Live (1 min)' : 'Cached closing data' },
+  //   { label: 'Current Status', value: isMarketOpen ? 'Live Trading' : 'Market Closed' },
+  // ], [isMarketOpen]);
 
   // Early returns for loading and error states
   if (loading && stocks.length === 0) {

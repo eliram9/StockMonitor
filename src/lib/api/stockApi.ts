@@ -467,8 +467,8 @@ export async function fetchMultipleStocks(
         );
         const stocks = await Promise.all(stockPromises);
         
-        const totalNews = stocks.reduce((sum, stock) => sum + stock.summaries.length, 0);
-        const cacheHits = Array.from(newsCache.keys()).filter(key => tickers.includes(key)).length;
+        // const totalNews = stocks.reduce((sum, stock) => sum + stock.summaries.length, 0);
+        // const cacheHits = Array.from(newsCache.keys()).filter(key => tickers.includes(key)).length;
         
         
         return stocks;
