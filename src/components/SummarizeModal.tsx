@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { getCachedSummary, setCachedSummary } from '@/lib/utils/aiSummaryCache';
 
 interface SummarizeModalProps {
     isOpen: boolean;
@@ -25,16 +26,32 @@ function parseSummaryContent(summary: string): {
     }> = [];
 
     const lines = summary.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-
+    
+    let currentSection = '';
+    
     lines.forEach(line => {
         // Headers
         if (line.startsWith('#')) {
             const level = line.match(/^#+/)?.[0].length || 1;
             const content = line.replace(/^#+\s*/, '');
             sections.push({ type: 'header', content, level });
+            
+            // Track current section for context-aware parsing
+            const lowerContent = content.toLowerCase();
+            if (lowerContent.includes('key points')) {
+                currentSection = 'key-points';
+            } else if (lowerContent.includes('what happened')) {
+                currentSection = 'what-happened';
+            } else if (lowerContent.includes('why it matters')) {
+                currentSection = 'why-matters';
+            } else if (lowerContent.includes("what's next")) {
+                currentSection = 'whats-next';
+            } else {
+                currentSection = '';
+            }
         }
-        // List items
-        else if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) {
+        // List items - only treat as list if we're in Key Points section
+        else if ((line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) && currentSection === 'key-points') {
             const content = line.replace(/^[•\-*]\s*/, '');
             sections.push({ type: 'list', content });
         }
@@ -47,9 +64,11 @@ function parseSummaryContent(summary: string): {
         else if (line.includes('**')) {
             sections.push({ type: 'emphasis', content: line });
         }
-        // Regular paragraphs
+        // Regular paragraphs - including content that starts with bullets in non-list sections
         else {
-            sections.push({ type: 'paragraph', content: line });
+            // Clean up any bullet points at the start for non-list sections
+            const cleanContent = currentSection !== 'key-points' ? line.replace(/^[•\-*] /, '') : line;
+            sections.push({ type: 'paragraph', content: cleanContent });
         }
     });
 
@@ -70,10 +89,19 @@ export function SummarizeModal({ isOpen, onClose, headline, ticker, url, icon }:
 
     useEffect(() => {
         if (isOpen) {
-            console.log('Modal opened with URL:', url);
             setLoading(true);
             setError(null);
-        
+
+            // 1. Try cache first
+            const cached = getCachedSummary(url);
+            if (cached) {
+                setSummary(cached);
+                setParsedContent(parseSummaryContent(cached));
+                setLoading(false);
+                return;
+            }
+
+            // 2. If not cached, fetch from API
             fetch('/api/summary', {
                 method: 'POST',
                 headers: {
@@ -82,45 +110,33 @@ export function SummarizeModal({ isOpen, onClose, headline, ticker, url, icon }:
                 body: JSON.stringify({ url }),
             })
                 .then(async response => {
-                    console.log('API response status:', response.status);
-                    console.log('API response headers:', response.headers);
-                
-                // Get the response text first
-                const responseText = await response.text();
-                    console.log('API response text:', responseText);
-                
-                // Try to parse as JSON
-                let data;
-                try {
-                    data = JSON.parse(responseText);
-                } catch (parseError) {
-                    console.error('Failed to parse response as JSON:', parseError);
-                    throw new Error(`Invalid JSON response: ${responseText.substring(0, 200)}...`);
-                }
-                
-                if (!response.ok) {
-                    console.error('API error response:', data);
-                    throw new Error(data.error || `HTTP error! status: ${response.status}`);
-                }
-                
-                return data;
-            })
-            .then(data => {
-                if (data.summary) {
-                    setSummary(data.summary);
-                    const parsed = parseSummaryContent(data.summary);
-                    setParsedContent(parsed);
-                } else {
-                    throw new Error('No summary returned from API');
-                }
-            })
-            .catch(err => {
-                console.error('API error:', err);
-                setError(err.message || 'Failed to fetch summary');
-            })
-            .finally(() => {
-                setLoading(false);
-            });
+                    const responseText = await response.text();
+                    let data;
+                    try {
+                        data = JSON.parse(responseText);
+                    } catch (parseError) {
+                        throw new Error(`Invalid JSON response: ${responseText.substring(0, 200)}...`);
+                    }
+                    if (!response.ok) {
+                        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+                    }
+                    return data;
+                })
+                .then(data => {
+                    if (data.summary) {
+                        setSummary(data.summary);
+                        setParsedContent(parseSummaryContent(data.summary));
+                        setCachedSummary(url, data.summary);
+                    } else {
+                        throw new Error('No summary returned from API');
+                    }
+                })
+                .catch(err => {
+                    setError(err.message || 'Failed to fetch summary');
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
         }
     }, [isOpen, url]);
 
@@ -170,7 +186,7 @@ export function SummarizeModal({ isOpen, onClose, headline, ticker, url, icon }:
             
             case 'paragraph':
                 return (
-                    <p key={index} className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 mb-3">
+                    <p key={index} className="text-sm leading-relaxed modal-text mb-3">
                         {section.content}
                     </p>
                 );
@@ -179,7 +195,7 @@ export function SummarizeModal({ isOpen, onClose, headline, ticker, url, icon }:
                 return (
                     <div key={index} className="flex items-baseline mb-2">
                         <span className="text-blue-500 mr-2">•</span>
-                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                        <span className="text-sm modal-text">
                             {section.content}
                         </span>
                     </div>
@@ -227,10 +243,9 @@ export function SummarizeModal({ isOpen, onClose, headline, ticker, url, icon }:
                             <span className="text-xl">🤖</span>
                         </div>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
-                        aria-label="Close modal"
+                    <button onClick={onClose}
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
+                            aria-label="Close modal"
                     >
                         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -246,13 +261,12 @@ export function SummarizeModal({ isOpen, onClose, headline, ticker, url, icon }:
                         <div className="flex items-center space-x-3">
                             {icon && (
                                 <div className="w-8 h-8 rounded-full overflow-hidden bg-white border border-gray-200 flex-shrink-0">
-                                    <Image
-                                        src={icon}
-                                        alt={`${ticker} logo`}
-                                        width={32}
-                                        height={32}
-                                        className="object-contain"
-                                        onError={(e) => {
+                                    <Image src={icon}
+                                           alt={`${ticker} logo`}
+                                           width={32}
+                                           height={32}
+                                           className="object-contain"
+                                           onError={(e) => {
                                             e.currentTarget.style.display = 'none';
                                         }}
                                     />
@@ -324,7 +338,7 @@ export function SummarizeModal({ isOpen, onClose, headline, ticker, url, icon }:
                                             keyPointsItems.push(
                                                 <div key={`keypoints-item-${index}`} className="flex items-baseline">
                                                     <span className="text-blue-500 mr-2">•</span>
-                                                    <span className="text-sm text-gray-700">
+                                                    <span className="text-sm modal-text">
                                                         {section.content}
                                                     </span>
                                                 </div>
@@ -334,8 +348,8 @@ export function SummarizeModal({ isOpen, onClose, headline, ticker, url, icon }:
                                         else if (section.type === 'header' && inKeyPointsSection) {
                                             // Render the Key Points section with all its items
                                             elements.push(
-                                                <div key="keypoints-section" className="bg-gray-100 px-2 py-4 rounded-lg mb-3">
-                                                    <h3 className="text-lg font-semibold text-gray-800 mb-2 pb-2">
+                                                <div key="keypoints-section" className="bg-gray-100 px-2 py-4 rounded-lg mb-3 modal-text">
+                                                    <h3 className="text-lg font-semibold mb-2 pb-2">
                                                         Key Points
                                                     </h3>
                                                     <div className="space-y-1">
@@ -363,9 +377,8 @@ export function SummarizeModal({ isOpen, onClose, headline, ticker, url, icon }:
                 <div className="px-6 pb-6">
                     <div className="px-6 border-t border-gray-400 mb-6"></div>
                     <div className="flex justify-end">
-                        <button
-                            onClick={onClose}
-                            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
+                        <button onClick={onClose}
+                                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
                         >
                             Close
                         </button>

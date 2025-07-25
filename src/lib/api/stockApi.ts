@@ -73,7 +73,6 @@ const SOURCE_LOGOS: Record<string, string> = {
     "Business Wire": "https://logo.clearbit.com/businesswire.com",
     "PR Newswire": "https://logo.clearbit.com/prnewswire.com",
     "Zacks": "https://logo.clearbit.com/zacks.com",
-    "Motley Fool": "https://logo.clearbit.com/fool.com",
     "TheStreet": "https://logo.clearbit.com/thestreet.com",
     "Barron's": "https://logo.clearbit.com/barrons.com",
     "Wall Street Journal": "https://logo.clearbit.com/wsj.com",
@@ -170,11 +169,40 @@ async function fetchCompanyProfile(ticker: string, apiKey: string): Promise<{ na
     // Check cache first (24-hour cache since company data rarely changes)
     const cached = companyCache.get(ticker);
     if (cached && (Date.now() - cached.timestamp) < COMPANY_CACHE_DURATION) {
-        console.log(`🏢 Using cached company profile for ${ticker}`);
         return cached.profile;
     }
     
-    console.log(`🏢 Fetching company profile for ${ticker}...`);
+    // Handle special tickers with custom branding
+    if (ticker === 'QQQ') {
+        const qqqProfile = {
+            name: 'Invesco QQQ Trust',
+            logo: 'https://logo.clearbit.com/invesco.com'
+        };
+        
+        // Cache QQQ profile
+        companyCache.set(ticker, {
+            profile: qqqProfile,
+            timestamp: Date.now()
+        });
+        
+        return qqqProfile;
+    }
+    
+    // Handle Bitcoin/Crypto tickers with custom branding
+    if (ticker.includes('BTC') || ticker.includes('BITCOIN') || ticker.includes('BTCUSDT')) {
+        const bitcoinProfile = {
+            name: 'Bitcoin',
+            logo: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png'
+        };
+        
+        // Cache Bitcoin profile
+        companyCache.set(ticker, {
+            profile: bitcoinProfile,
+            timestamp: Date.now()
+        });
+        
+        return bitcoinProfile;
+    }
     
     const url = `https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${apiKey}`;
     
@@ -190,7 +218,6 @@ async function fetchCompanyProfile(ticker: string, apiKey: string): Promise<{ na
         }
         
         const data: FinnhubCompanyProfile = await response.json();
-        console.log(`🔍 Company profile response for ${ticker}:`, data);
         
         const profile = {
             name: data.name || `${ticker} Inc.`,
@@ -203,7 +230,6 @@ async function fetchCompanyProfile(ticker: string, apiKey: string): Promise<{ na
             timestamp: Date.now()
         });
         
-        console.log(`✅ Company profile cached for ${ticker}: ${profile.name} (logo: ${profile.logo ? 'yes' : 'no'})`);
         return profile;
         
     } catch (error) {
@@ -222,7 +248,6 @@ async function fetchCompanyProfile(ticker: string, apiKey: string): Promise<{ na
  * @returns Promise with price data + company info
  */
 export async function fetchStockPrice(ticker: string): Promise<Omit<Stock, 'summaries'>> {
-    console.log(`📈 Fetching price-only data for ${ticker}...`);
   
     const apiKey = process.env.FINNHUB_API_KEY;
     if (!apiKey) {
@@ -258,7 +283,6 @@ export async function fetchStockPrice(ticker: string): Promise<Omit<Stock, 'summ
         // Store price for change detection
         priceHistory.set(ticker, price);
         
-        console.log(`💰 Price updated ${ticker}: $${price} (${changePercent > 0 ? '+' : ''}${changePercent.toFixed(2)}%)`);
         
         return {
             ticker,
@@ -288,13 +312,11 @@ function shouldRefreshNews(ticker: string, currentPrice: number): boolean {
     
     // No cache exists - fetch news
     if (!cached) {
-        console.log(`📰 No news cache for ${ticker}, fetching fresh news`);
         return true;
     }
     
     // Cache expired (15 minutes)
     if (now - cached.timestamp > NEWS_CACHE_DURATION) {
-        console.log(`⏰ News cache expired for ${ticker} (${Math.round((now - cached.timestamp)/60000)} mins old)`);
         return true;
     }
     
@@ -303,7 +325,6 @@ function shouldRefreshNews(ticker: string, currentPrice: number): boolean {
     if (lastPrice > 0) {
         const changePercent = Math.abs((currentPrice - lastPrice) / lastPrice) * 100;
         if (changePercent >= SIGNIFICANT_CHANGE_THRESHOLD) {
-            console.log(`🚨 Significant price change for ${ticker}: ${changePercent.toFixed(1)}% - refreshing news`);
             return true;
         }
     }
@@ -334,13 +355,11 @@ export async function fetchStockNews(
     if (!forceRefresh && !shouldRefreshNews(ticker, currentPrice)) {
         const cached = newsCache.get(ticker);
         if (cached) {
-            console.log(`📰 Using cached news for ${ticker} (${cached.data.length} articles)`);
             return cached.data;
         }
     }
     
     // Fetch fresh news
-    console.log(`📰 Fetching fresh news for ${ticker}...`);
     
     const toDate = new Date();
     const fromDate = new Date();
@@ -384,7 +403,6 @@ export async function fetchStockNews(
             lastPrice: currentPrice
         });
         
-        console.log(`✅ Fresh news cached for ${ticker} (${summaries.length} articles)`);
         return summaries;
         
     } catch (error) {
@@ -441,7 +459,6 @@ export async function fetchMultipleStocks(
     includeNews: boolean = true,
     forceNewsRefresh: boolean = false
 ): Promise<Stock[]> {
-    console.log(`📊 Fetching optimized data for ${tickers.length} stocks: ${tickers.join(', ')}`);
     
     try {
         // Fetch all stocks in parallel
@@ -450,10 +467,9 @@ export async function fetchMultipleStocks(
         );
         const stocks = await Promise.all(stockPromises);
         
-        const totalNews = stocks.reduce((sum, stock) => sum + stock.summaries.length, 0);
-        const cacheHits = Array.from(newsCache.keys()).filter(key => tickers.includes(key)).length;
+        // const totalNews = stocks.reduce((sum, stock) => sum + stock.summaries.length, 0);
+        // const cacheHits = Array.from(newsCache.keys()).filter(key => tickers.includes(key)).length;
         
-        console.log(`✅ Optimized fetch complete: ${stocks.length} stocks, ${totalNews} news articles (${cacheHits} cache hits)`);
         
         return stocks;
         
@@ -469,7 +485,6 @@ export async function fetchMultipleStocks(
  * @param tickers - Array of stock symbols
  */
 export async function forceRefreshNews(tickers: string[]): Promise<void> {
-    console.log(`🔄 Force refreshing news for: ${tickers.join(', ')}`);
     
     for (const ticker of tickers) {
         const currentPrice = priceHistory.get(ticker) || 0;
@@ -517,14 +532,12 @@ export function isValidTicker(ticker: string): boolean {
  * @returns Promise<Omit<Stock, 'summaries'>[]> - Array of stock price data (no news)
  */
 export async function fetchMultipleStockPrices(tickers: string[]): Promise<Omit<Stock, 'summaries'>[]> {
-    console.log(`📊 Fetching price data for ${tickers.length} stocks: ${tickers.join(', ')}`);
     
     try {
         // Fetch all stock prices in parallel
         const stockPromises = tickers.map(ticker => fetchStockPrice(ticker));
         const stocks = await Promise.all(stockPromises);
         
-        console.log(`✅ Price fetch complete: ${stocks.length} stocks`);
         
         return stocks;
         

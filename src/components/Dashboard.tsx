@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useMemo, useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { useStocks } from '@/lib/hooks/useStocks';
 import { StockCard } from './StockCard';
 import { BenzingaNews } from './BenzingaNews';
@@ -79,7 +79,7 @@ MarketStatusIndicator.displayName = 'MarketStatusIndicator';
 
 // Loading component
 const LoadingSpinner = React.memo(() => (
-  <div className="min-h-screen bg-gradient-to-br from-blue-50 to- p-8">
+  <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-8">
     <div className="max-w-4xl mx-auto">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
@@ -181,12 +181,12 @@ export function Dashboard() {
   }, [refetch]);
 
   // Memoized market info data
-  const marketInfoData = useMemo(() => [
-    { label: 'Data Source', value: MARKET_CONFIG.API.DATA_SOURCE },
-    { label: 'Market Hours', value: 'Mon-Fri: 09:30 - 16:30 ET' },
-    { label: 'Update Strategy', value: isMarketOpen ? 'Live (1 min)' : 'Cached closing data' },
-    { label: 'Current Status', value: isMarketOpen ? 'Live Trading' : 'Market Closed' },
-  ], [isMarketOpen]);
+  // const marketInfoData = useMemo(() => [
+  //   { label: 'Data Source', value: MARKET_CONFIG.API.DATA_SOURCE },
+  //   { label: 'Market Hours', value: 'Mon-Fri: 09:30 - 16:30 ET' },
+  //   { label: 'Update Strategy', value: isMarketOpen ? 'Live (1 min)' : 'Cached closing data' },
+  //   { label: 'Current Status', value: isMarketOpen ? 'Live Trading' : 'Market Closed' },
+  // ], [isMarketOpen]);
 
   // Early returns for loading and error states
   if (loading && stocks.length === 0) {
@@ -246,7 +246,7 @@ export function Dashboard() {
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {/* Stock Cards Grid */}
-            <div className="grid md:grid-cols-2 gap-8 mb-8">
+            <div className="grid md:grid-cols-3 gap-8 mb-8">
                 {stocks.map((stock) => (
                     <StockCard key={stock.ticker} 
                                stock={stock} 
