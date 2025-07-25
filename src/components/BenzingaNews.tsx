@@ -13,8 +13,9 @@ interface BenzingaNewsProps {
  * Displays news articles specifically from Benzinga API in a dedicated section
  */
 export function BenzingaNews({ stocks }: BenzingaNewsProps) {
-    // Collect only Benzinga news from all stocks and sort by timestamp
+    // Collect only Benzinga news from TSLA and OKLO (exclude QQQ)
     const allBenzingaNews = stocks
+        .filter(stock => stock.ticker === 'TSLA' || stock.ticker === 'OKLO')
         .flatMap(stock => {
             return stock.summaries
                 .filter(summary => summary.source === 'Benzinga')

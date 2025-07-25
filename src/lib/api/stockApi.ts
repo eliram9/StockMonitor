@@ -172,6 +172,37 @@ async function fetchCompanyProfile(ticker: string, apiKey: string): Promise<{ na
         return cached.profile;
     }
     
+    // Handle special tickers with custom branding
+    if (ticker === 'QQQ') {
+        const qqqProfile = {
+            name: 'Invesco QQQ Trust',
+            logo: 'https://logo.clearbit.com/invesco.com'
+        };
+        
+        // Cache QQQ profile
+        companyCache.set(ticker, {
+            profile: qqqProfile,
+            timestamp: Date.now()
+        });
+        
+        return qqqProfile;
+    }
+    
+    // Handle Bitcoin/Crypto tickers with custom branding
+    if (ticker.includes('BTC') || ticker.includes('BITCOIN') || ticker.includes('BTCUSDT')) {
+        const bitcoinProfile = {
+            name: 'Bitcoin',
+            logo: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png'
+        };
+        
+        // Cache Bitcoin profile
+        companyCache.set(ticker, {
+            profile: bitcoinProfile,
+            timestamp: Date.now()
+        });
+        
+        return bitcoinProfile;
+    }
     
     const url = `https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${apiKey}`;
     

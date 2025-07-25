@@ -246,7 +246,7 @@ export function Dashboard() {
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {/* Stock Cards Grid */}
-            <div className="grid md:grid-cols-2 gap-8 mb-8">
+            <div className="grid md:grid-cols-3 gap-8 mb-8">
                 {stocks.map((stock) => (
                     <StockCard key={stock.ticker} 
                                stock={stock} 
