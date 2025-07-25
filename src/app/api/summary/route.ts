@@ -7,7 +7,7 @@ const SYSTEM_PROMPT = `You are a friendly financial mentor explaining news to so
 • [3-5 bullet points covering the main facts]
 
 ## What Happened
-[One clear paragraph explaining the core event]
+[One detailed clear sentence explaining the core event]
 
 ## Why It Matters
 [1-2 sentences explaining the significance and impact]
@@ -21,37 +21,30 @@ Keep the total around **200-250 words** and focus on making complex financial co
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('=== Summary API called ===');
     
     const body = await request.json();
-    console.log('Request body:', body);
     
     const { url } = body;
 
     // Improved input validation
     if (!url || typeof url !== 'string') {
-      console.log('Error: No valid URL provided');
       return NextResponse.json(
         { error: 'Valid URL is required' },
         { status: 400 }
       );
     }
 
-    console.log('URL received:', url);
 
     const openaiApiKey = process.env.OPENAI_API_KEY;
     if (!openaiApiKey) {
-      console.log('Error: OpenAI API key not configured');
       return NextResponse.json(
         { error: 'OpenAI API key not configured' },
         { status: 500 }
       );
     }
 
-    console.log('OpenAI key found, length:', openaiApiKey.length);
 
     // Step 1: Fetch the webpage content
-    console.log('Fetching webpage content...');
     let articleContent = '';
     
     try {
@@ -74,7 +67,6 @@ export async function POST(request: NextRequest) {
         throw new Error('Could not extract meaningful content from the page');
       }
       
-      console.log('Content extracted, length:', articleContent.length);
       
     } catch (fetchError) {
       console.error('Error fetching webpage:', fetchError);
@@ -85,7 +77,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 2: Summarize with OpenAI using extracted prompt
-    console.log('Sending to OpenAI for summarization...');
     
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -94,7 +85,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: "gpt-4o-mini",
         messages: [
           {
             role: 'system',
@@ -110,7 +101,6 @@ export async function POST(request: NextRequest) {
       }),
     });
 
-    console.log('OpenAI response status:', openaiResponse.status);
 
     if (!openaiResponse.ok) {
       const errorData = await openaiResponse.json();
@@ -122,7 +112,6 @@ export async function POST(request: NextRequest) {
     }
 
     const openaiData = await openaiResponse.json();
-    console.log('OpenAI response:', openaiData);
 
     const summary = openaiData.choices[0]?.message?.content || 'Summary could not be generated.';
 

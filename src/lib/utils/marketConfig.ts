@@ -96,9 +96,7 @@ export interface NextMarketChange {
 */
 export const logger = {
     info: (message: string, ...args: unknown[]) => {
-        if (process.env.NODE_ENV === 'development') {
-            console.log(`📊 ${message}`, ...args);
-        }
+        // Empty - removed console.log statements
     },
     warn: (message: string, ...args: unknown[]) => {
         if (process.env.NODE_ENV === 'development') {
@@ -109,18 +107,12 @@ export const logger = {
         console.error(`❌ ${message}`, ...args);
     },
     market: (message: string, ...args: unknown[]) => {
-        if (process.env.NODE_ENV === 'development') {
-            console.log(`🕐 ${message}`, ...args);
-        }
+        // Empty - removed console.log statements
     },
     polling: (message: string, ...args: unknown[]) => {
-        if (process.env.NODE_ENV === 'development') {
-            console.log(`⚡ ${message}`, ...args);
-        }
+        // Empty - removed console.log statements
     },
     scheduler: (message: string, ...args: unknown[]) => {
-        if (process.env.NODE_ENV === 'development') {
-            console.log(`⏰ ${message}`, ...args);
-        }
+        // Empty - removed console.log statements
     },
 };

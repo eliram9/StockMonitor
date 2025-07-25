@@ -11,7 +11,6 @@ export const resolvers = {
      */
     stock: async (_: any, { ticker }: { ticker: string }): Promise<Stock> => {
       try {
-        console.log(`🔍 GraphQL: Fetching stock data for ${ticker} (Finnhub prices + Benzinga news)`);
         
         // Get price data from Finnhub
         const priceData = await fetchStockPrice(ticker);
@@ -25,7 +24,6 @@ export const resolvers = {
           summaries: benzingaSummaries
         };
         
-        console.log(`✅ GraphQL: Stock ${ticker} resolved with ${benzingaSummaries.length} Benzinga news articles`);
         return result;
         
       } catch (error) {
@@ -39,7 +37,6 @@ export const resolvers = {
      */
     stocks: async (_: any, { tickers }: { tickers: string[] }): Promise<Stock[]> => {
       try {
-        console.log(`🔍 GraphQL: Fetching stocks data for ${tickers.length} tickers (Finnhub prices + Benzinga news): ${tickers.join(', ')}`);
         
         // FIXED: Get price data from Finnhub (returns array, not object)
         const priceDataArray = await fetchMultipleStockPrices(tickers);
@@ -58,7 +55,6 @@ export const resolvers = {
           const benzingaNews = benzingaNewsMap[priceData.ticker] || [];
           const benzingaSummaries = convertToSummaries(benzingaNews);
           
-          console.log(`📰 ${priceData.ticker}: ${benzingaSummaries.length} Benzinga articles`);
           
           return {
             ...priceData,
@@ -67,7 +63,6 @@ export const resolvers = {
         });
         
         const totalNews = combinedResult.reduce((sum, stock) => sum + stock.summaries.length, 0);
-        console.log(`✅ GraphQL: ${combinedResult.length} stocks resolved with ${totalNews} total Benzinga news articles`);
         
         return combinedResult;
         
@@ -82,7 +77,6 @@ export const resolvers = {
      */
     stockWithBenzingaNews: async (_: any, { ticker }: { ticker: string }): Promise<Stock> => {
       try {
-        console.log(`🔍 GraphQL: Testing Benzinga news for ${ticker}`);
         
         // Get price data from Finnhub
         const priceData = await fetchStockPrice(ticker);
@@ -96,7 +90,6 @@ export const resolvers = {
           summaries
         };
         
-        console.log(`✅ GraphQL: ${ticker} with Benzinga news - ${summaries.length} articles`);
         return result;
         
       } catch (error) {
@@ -110,7 +103,6 @@ export const resolvers = {
      */
     compareNews: async (_: any, { ticker }: { ticker: string }) => {
       try {
-        console.log(`🔍 GraphQL: Comparing news sources for ${ticker}`);
         
         // Get Finnhub data (complete with news)
         const finnhubData = await fetchFinnhubStock(ticker, true, false);
@@ -133,7 +125,6 @@ export const resolvers = {
           }
         };
         
-        console.log(`✅ GraphQL: News comparison for ${ticker} - Finnhub: ${comparison.comparison.finnhubCount}, Benzinga: ${comparison.comparison.benzingaCount}`);
         return comparison;
         
       } catch (error) {
@@ -147,7 +138,6 @@ export const resolvers = {
      */
     benzingaHealth: async () => {
       try {
-        console.log('🔍 GraphQL: Testing Benzinga API health');
         
         // Test with AAPL
         const testNews = await fetchBenzingaNews('AAPL', 150, false);
@@ -160,7 +150,6 @@ export const resolvers = {
           sampleHeadline: testNews[0]?.headlines[0] || 'No news available'
         };
         
-        console.log(`✅ GraphQL: Benzinga API healthy - ${health.articlesReturned} articles`);
         return health;
         
       } catch (error) {
@@ -181,7 +170,6 @@ export const resolvers = {
      */
     refreshStock: async (_: any, { ticker }: { ticker: string }): Promise<Stock> => {
       try {
-        console.log(`🔄 GraphQL: Force refreshing ${ticker} (Finnhub prices + Benzinga news)`);
         
         // Get fresh price data from Finnhub
         const priceData = await fetchStockPrice(ticker);
@@ -195,7 +183,6 @@ export const resolvers = {
           summaries: benzingaSummaries
         };
         
-        console.log(`✅ GraphQL: ${ticker} refreshed with ${benzingaSummaries.length} Benzinga articles`);
         return result;
         
       } catch (error) {

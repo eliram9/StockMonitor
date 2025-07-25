@@ -211,12 +211,13 @@ export function getTimeUntilMarketOpen(): { days: number; hours: number; minutes
   
   const currentTimeInMinutes = easternTime.getHours() * 60 + easternTime.getMinutes();
   
-  // If it's past market hours today or weekend, move to next weekday
+  // If it's past market hours today, weekend, or holiday, move to next trading day
   if (currentTimeInMinutes > MARKET_CONFIG.MARKET_CLOSE || 
-      easternTime.getDay() === 0 || easternTime.getDay() === 6) {
+      easternTime.getDay() === 0 || easternTime.getDay() === 6 || 
+      getCurrentMarketInfo().isHoliday) {
     do {
       nextOpen.setDate(nextOpen.getDate() + 1);
-    } while (nextOpen.getDay() === 0 || nextOpen.getDay() === 6); // Skip weekends
+    } while (nextOpen.getDay() === 0 || nextOpen.getDay() === 6 || isHoliday(nextOpen)); // Skip weekends and holidays
     
     nextOpen.setHours(9, 30, 0, 0);
   }
@@ -325,6 +326,12 @@ export function getNextMarketStateChange(): NextMarketChange {
       // Other weekdays - next day
       nextMarketDay.setDate(nextMarketDay.getDate() + 1);
     }
+    
+    // Skip holidays as well
+    while (nextMarketDay.getDay() === 0 || nextMarketDay.getDay() === 6 || isHoliday(nextMarketDay)) {
+      nextMarketDay.setDate(nextMarketDay.getDate() + 1);
+    }
+    
     nextMarketDay.setHours(9, 30, 0, 0);
     
     const milliseconds = nextMarketDay.getTime() - easternTime.getTime();

@@ -60,7 +60,6 @@ export function ThemeSwitcher() {
 
   const toggleTheme = () => {
     const newTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
-    console.log('Setting theme to:', newTheme);
     setTheme(newTheme);
   };
 

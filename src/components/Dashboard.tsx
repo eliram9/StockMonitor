@@ -79,7 +79,7 @@ MarketStatusIndicator.displayName = 'MarketStatusIndicator';
 
 // Loading component
 const LoadingSpinner = React.memo(() => (
-  <div className="min-h-screen bg-gradient-to-br from-blue-50 to- p-8">
+  <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-8">
     <div className="max-w-4xl mx-auto">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>

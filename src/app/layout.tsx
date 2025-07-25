@@ -16,11 +16,10 @@ export default function RootLayout({
                 <title>StockMonitor</title>
                 <meta name="description" content="Monitor your favorite stocks with real-time data and analytics" />
             </head>
-            <body>
-                <ThemeProvider 
-                    attribute="class" 
-                    defaultTheme="light" 
-                    enableSystem={false}
+            <body suppressHydrationWarning>
+                <ThemeProvider attribute="class" 
+                               defaultTheme="light" 
+                               enableSystem={false}
                 >
                     <ApolloProvider client={apolloClient}>
                         {children}
