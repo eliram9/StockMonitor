@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { isHoliday, getHolidays } from 'nyse-holidays';
 
-interface MarketHolidayTestProps {
-  // No props needed for testing
+interface Holiday {
+  date: Date;
+  name: string;
 }
 
-export function MarketHoliday({}: MarketHolidayTestProps) {
+export function MarketHoliday() {
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [isHolidayToday, setIsHolidayToday] = useState<boolean | null>(null);
-    const [holidaysThisYear, setHolidaysThisYear] = useState<any[]>([]);
-    const [nextHoliday, setNextHoliday] = useState<any | null>(null);
+    const [, setIsHolidayToday] = useState<boolean | null>(null);
+    const [holidaysThisYear, setHolidaysThisYear] = useState<Holiday[]>([]);
+    const [nextHoliday, setNextHoliday] = useState<Holiday | null>(null);
     const [showAllHolidays, setShowAllHolidays] = useState(false);
 
     useEffect(() => {
@@ -35,10 +36,9 @@ export function MarketHoliday({}: MarketHolidayTestProps) {
 
             // Find next holiday
             const nextHoliday = holidays.find(holiday => {
-                const holidayDate = new Date(holiday.date);
-                return holidayDate > currentDate;
+                return holiday.date > currentDate;
             });
-            setNextHoliday(nextHoliday);
+            setNextHoliday(nextHoliday || null);
 
             } catch (error) {
                 console.error('Error testing nyse-holidays:', error);
@@ -61,8 +61,8 @@ export function MarketHoliday({}: MarketHolidayTestProps) {
 
     const getUpcomingHolidays = () => {
         return holidaysThisYear
-        .filter(holiday => new Date(holiday.date) > currentDate)
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        .filter(holiday => holiday.date > currentDate)
+        .sort((a, b) => a.date.getTime() - b.date.getTime());
     };
 
     const upcomingHolidays = getUpcomingHolidays();
@@ -78,9 +78,9 @@ export function MarketHoliday({}: MarketHolidayTestProps) {
         {nextHoliday && (
             <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                    <p className="text-sm text-gray-600 dark:text-gray-300">Next Holiday: {formatDate(new Date(nextHoliday.date))} ({nextHoliday.name})</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">Next Holiday: {formatDate(nextHoliday.date)} ({nextHoliday.name})</p>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Days until holiday: {getDaysUntilHoliday(new Date(nextHoliday.date))}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Days until holiday: {getDaysUntilHoliday(nextHoliday.date)}</p>
             </div>
         )}
 
@@ -106,7 +106,7 @@ export function MarketHoliday({}: MarketHolidayTestProps) {
                 {upcomingHolidays.slice(1).map((holiday, index) => (
                     <div key={index} className="flex justify-between items-center text-sm text-gray-600">
                         <span>{holiday.name}</span>
-                        <span>{formatDate(new Date(holiday.date))} ({getDaysUntilHoliday(new Date(holiday.date))} days)</span>
+                        <span>{formatDate(holiday.date)} ({getDaysUntilHoliday(holiday.date)} days)</span>
                     </div>
                 ))}
                 </div>

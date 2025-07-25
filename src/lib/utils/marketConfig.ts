@@ -95,7 +95,7 @@ export interface NextMarketChange {
 * Environment-based logging utility
 */
 export const logger = {
-    info: (message: string, ...args: unknown[]) => {
+    info: (message?: string, ...args: unknown[]) => {
         // Empty - removed console.log statements
     },
     warn: (message: string, ...args: unknown[]) => {
@@ -103,16 +103,16 @@ export const logger = {
             console.warn(`⚠️ ${message}`, ...args);
         }
     },
-    error: (message: string, ...args: unknown[]) => {
+    error: (message?: string, ...args: unknown[]) => {
         console.error(`❌ ${message}`, ...args);
     },
-    market: (message: string, ...args: unknown[]) => {
+    market: (message?: string, ...args: unknown[]) => {
         // Empty - removed console.log statements
     },
-    polling: (message: string, ...args: unknown[]) => {
+    polling: (message?: string, ...args: unknown[]) => {
         // Empty - removed console.log statements
     },
-    scheduler: (message: string, ...args: unknown[]) => {
+    scheduler: (message?: string, ...args: unknown[]) => {
         // Empty - removed console.log statements
     },
 };

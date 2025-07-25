@@ -130,10 +130,10 @@ function useSmartScheduler(
     const nextChange = getNextMarketStateChange();
     
     if (nextChange.milliseconds > 0) {
-      logger.scheduler(`🚀 SMART: Next check in ${Math.round(nextChange.milliseconds/1000/60)} minutes - ${nextChange.description}`);
+      logger.scheduler();
       
       const timeoutId = setTimeout(() => {
-        logger.scheduler('🎯 SMART: Market state changing - updating now!');
+        logger.scheduler();
         onMarketStateChange();
         
         // Schedule the NEXT change after this one
@@ -179,13 +179,8 @@ export function useStocks(tickers: string[] = [...MARKET_CONFIG.DEFAULT_TICKERS]
     dispatch({ type: 'UPDATE_MARKET_STATE', payload: newMarketState });
     dispatch({ type: 'SET_LAST_UPDATE', payload: new Date() });
     
-    logger.info('Smart market status updated:', newMarketState.status);
-    logger.polling(
-      'Price polling:',
-      newMarketState.pollingConfig.priceInterval ? 
-        `${newMarketState.pollingConfig.priceInterval/1000}s` : 
-        'STOPPED'
-    );
+    logger.info();
+    logger.polling();
   }, []);
 
   // Smart scheduler for market state changes
@@ -211,10 +206,10 @@ export function useStocks(tickers: string[] = [...MARKET_CONFIG.DEFAULT_TICKERS]
   // Smart polling control based on market hours
   useEffect(() => {
     if (state.marketState.pollingConfig.priceInterval && state.marketState.pollingConfig.priceInterval > 0) {
-      logger.info(`🟢 Starting price polling every ${state.marketState.pollingConfig.priceInterval/1000} seconds`);
+      logger.info();
       startPolling(state.marketState.pollingConfig.priceInterval);
     } else {
-      logger.info('🔴 Market closed - stopping price polling');
+      logger.info();
       stopPolling();
     }
 
@@ -230,9 +225,9 @@ export function useStocks(tickers: string[] = [...MARKET_CONFIG.DEFAULT_TICKERS]
   // Enhanced refetch with smart context awareness
   const smartRefetch = useCallback(() => {
     if (state.marketState.isOpen) {
-      logger.info('🔄 Manual refresh - Trading is active, fetching fresh data');
+      logger.info();
     } else {
-      logger.info('🔄 Manual refresh - Market closed, fetching cached data');
+      logger.info();
     }
     return refetch();
   }, [refetch, state.marketState.isOpen]);

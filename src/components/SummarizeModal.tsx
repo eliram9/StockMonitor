@@ -78,7 +78,7 @@ function parseSummaryContent(summary: string): {
 export function SummarizeModal({ isOpen, onClose, headline, ticker, url, icon }: SummarizeModalProps) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [summary, setSummary] = useState<string>('');
+    const [, setSummary] = useState<string>('');
     const [parsedContent, setParsedContent] = useState<{
         sections: Array<{
             type: 'header' | 'paragraph' | 'list' | 'quote' | 'emphasis';
@@ -114,7 +114,7 @@ export function SummarizeModal({ isOpen, onClose, headline, ticker, url, icon }:
                     let data;
                     try {
                         data = JSON.parse(responseText);
-                    } catch (parseError) {
+                    } catch {
                         throw new Error(`Invalid JSON response: ${responseText.substring(0, 200)}...`);
                     }
                     if (!response.ok) {
@@ -205,7 +205,7 @@ export function SummarizeModal({ isOpen, onClose, headline, ticker, url, icon }:
                 return (
                     <blockquote key={index} className="border-l-4 border-blue-200 pl-4 py-2 mb-3 bg-blue-50 dark:bg-blue-900/20 rounded-r">
                         <p className="text-sm italic text-gray-600 dark:text-gray-400">
-                            "{section.content}"
+                            &quot;{section.content}&quot;
                         </p>
                     </blockquote>
                 );
