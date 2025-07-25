@@ -18,7 +18,7 @@ function getEasternTime(): Date {
         const now = new Date();
         return new Date(now.toLocaleString("en-US", { timeZone: MARKET_CONFIG.TIMEZONE }));
     } catch (error) {
-        logger.error('Failed to get Eastern Time, using local time as fallback', error);
+        logger.error();
         return new Date();
     }
 }
@@ -37,7 +37,7 @@ function getFormattedEasternTime(): string {
             hour12: true
         }) + ' ET';
     } catch (error) {
-        logger.error('Failed to format Eastern Time', error);
+        logger.error();
         return 'Unknown ET';
     }
 }
@@ -51,7 +51,7 @@ function isCurrentDateHoliday(): boolean {
         const easternTime = getEasternTime();
         return isHoliday(easternTime);
     } catch (error) {
-        logger.error('Failed to check holiday status', error);
+        logger.error();
         return false; // Default to not holiday on error
     }
 }
@@ -85,13 +85,13 @@ export function isMarketOpen(): boolean {
     
     // Check if it's a holiday
     if (marketInfo.isHoliday) {
-        logger.market('Market closed: NYSE Holiday');
+        logger.market();
         return false;
     }
     
     // Check if it's a weekday
     if (!marketInfo.isWeekday) {
-        logger.market('Market closed: Weekend');
+        logger.market();
         return false;
     }
     
@@ -99,9 +99,9 @@ export function isMarketOpen(): boolean {
                          marketInfo.currentTimeInMinutes <= MARKET_CONFIG.MARKET_CLOSE;
     
     if (!isWithinHours) {
-        logger.market(`Market closed: Current time ${marketInfo.formattedTime} (Market: 9:30-16:30)`);
+        logger.market();
     } else {
-        logger.market(`Market open: Current time ${marketInfo.formattedTime}`);
+        logger.market();
     }
     
     return isWithinHours;
@@ -123,7 +123,7 @@ export function isFinalCaptureWindow(): boolean {
     const isFinalWindow = currentTimeInMinutes === MARKET_CONFIG.FINAL_CLOSE;
     
     if (isFinalWindow) {
-        logger.market('Final capture window: Capturing closing prices at 4:31 PM ET');
+        logger.market();
     }
     
     return isFinalWindow;
@@ -166,7 +166,7 @@ export function getPollingConfig(): PollingConfig {
   
   switch (status) {
     case 'MARKET_OPEN':
-      logger.polling('Smart polling: Market open - 1 minute intervals');
+      logger.polling();
       return {
         priceInterval: MARKET_CONFIG.POLLING.MARKET_OPEN,
         newsInterval: MARKET_CONFIG.POLLING.NEWS_MARKET_OPEN,
@@ -174,7 +174,7 @@ export function getPollingConfig(): PollingConfig {
       };
       
     case 'FINAL_CAPTURE':
-      logger.polling('Smart polling: Final capture window - capturing closing prices');
+      logger.polling();
       return {
         priceInterval: MARKET_CONFIG.POLLING.FINAL_CAPTURE,
         newsInterval: MARKET_CONFIG.POLLING.NEWS_MARKET_OPEN,
@@ -184,7 +184,7 @@ export function getPollingConfig(): PollingConfig {
     case 'MARKET_CLOSED':
     case 'WEEKEND':
     default:
-      logger.polling('Smart polling: Market closed - no polling (showing cached data)');
+      logger.polling();
       return {
         priceInterval: null,
         newsInterval: MARKET_CONFIG.POLLING.NEWS_MARKET_CLOSED,
@@ -262,7 +262,7 @@ export function getNextMarketStateChange(): NextMarketChange {
       nextMonday.setHours(9, 30, 0, 0);
       
       const milliseconds = nextMonday.getTime() - easternTime.getTime();
-      logger.scheduler(`Next change: Monday market open in ${Math.round(milliseconds/1000/60/60)} hours`);
+      logger.scheduler();
       
       return {
         milliseconds,
@@ -280,7 +280,7 @@ export function getNextMarketStateChange(): NextMarketChange {
       marketOpen.setHours(9, 30, 0, 0);
       const milliseconds = marketOpen.getTime() - easternTime.getTime();
       
-      logger.scheduler(`Next change: Market opens in ${Math.round(milliseconds/1000/60)} minutes`);
+      logger.scheduler();
       return {
         milliseconds,
         nextStatus: 'MARKET_OPEN',
@@ -295,7 +295,7 @@ export function getNextMarketStateChange(): NextMarketChange {
       marketClose.setHours(16, 30, 0, 0);
       const milliseconds = marketClose.getTime() - easternTime.getTime();
       
-      logger.scheduler(`Next change: Market closes in ${Math.round(milliseconds/1000/60)} minutes`);
+      logger.scheduler();
       return {
         milliseconds,
         nextStatus: 'FINAL_CAPTURE',
@@ -309,7 +309,7 @@ export function getNextMarketStateChange(): NextMarketChange {
       finalCapture.setHours(16, 31, 0, 0);
       const milliseconds = finalCapture.getTime() - easternTime.getTime();
       
-      logger.scheduler('Next change: Final capture in 1 minute');
+      logger.scheduler();
       return {
         milliseconds,
         nextStatus: 'FINAL_CAPTURE',
@@ -337,7 +337,7 @@ export function getNextMarketStateChange(): NextMarketChange {
     const milliseconds = nextMarketDay.getTime() - easternTime.getTime();
     const dayName = currentDay === 5 ? 'Monday' : 'tomorrow';
     
-    logger.scheduler(`Next change: Market opens ${dayName} in ${Math.round(milliseconds/1000/60/60)} hours`);
+    logger.scheduler();
     return {
       milliseconds,
       nextStatus: 'MARKET_OPEN',
@@ -345,7 +345,7 @@ export function getNextMarketStateChange(): NextMarketChange {
     };
     
   } catch (error) {
-    logger.error('Smart scheduler failed, using fallback', error);
+    logger.error();
     
     // Fallback: check again in 1 minute
     return {

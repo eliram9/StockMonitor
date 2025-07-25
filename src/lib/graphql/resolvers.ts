@@ -4,12 +4,18 @@ import { fetchStockPrice, fetchMultipleStockPrices, fetchStock as fetchFinnhubSt
 import { fetchBenzingaNews, fetchMultipleBenzingaNews, convertToSummaries } from '../api/benzingaNewsApi';
 import type { Stock } from './types';
 
+// Define GraphQL resolver context interface
+interface GraphQLContext {
+  req: Request;
+  params?: Record<string, unknown>;
+}
+
 export const resolvers = {
   Query: {
     /**
      * Get a single stock - Prices from Finnhub + News from Benzinga
      */
-    stock: async (_: any, { ticker }: { ticker: string }): Promise<Stock> => {
+    stock: async (_: unknown, { ticker }: { ticker: string }): Promise<Stock> => {
       try {
         
         // Get price data from Finnhub
@@ -35,7 +41,7 @@ export const resolvers = {
     /**
      * Get multiple stocks - Prices from Finnhub + News from Benzinga
      */
-    stocks: async (_: any, { tickers }: { tickers: string[] }): Promise<Stock[]> => {
+    stocks: async (_: unknown, { tickers }: { tickers: string[] }): Promise<Stock[]> => {
       try {
         
         // FIXED: Get price data from Finnhub (returns array, not object)
@@ -62,7 +68,7 @@ export const resolvers = {
           };
         });
         
-        const totalNews = combinedResult.reduce((sum, stock) => sum + stock.summaries.length, 0);
+        // const totalNews = combinedResult.reduce((sum, stock) => sum + stock.summaries.length, 0);
         
         return combinedResult;
         
@@ -75,7 +81,7 @@ export const resolvers = {
     /**
      * NEW: Test Benzinga news for a single stock
      */
-    stockWithBenzingaNews: async (_: any, { ticker }: { ticker: string }): Promise<Stock> => {
+    stockWithBenzingaNews: async (_: unknown, { ticker }: { ticker: string }): Promise<Stock> => {
       try {
         
         // Get price data from Finnhub
@@ -101,7 +107,7 @@ export const resolvers = {
     /**
      * NEW: Compare Finnhub vs Benzinga news
      */
-    compareNews: async (_: any, { ticker }: { ticker: string }) => {
+    compareNews: async (_: unknown, { ticker }: { ticker: string }) => {
       try {
         
         // Get Finnhub data (complete with news)
@@ -168,7 +174,7 @@ export const resolvers = {
     /**
      * Force refresh stock data - Prices from Finnhub + News from Benzinga
      */
-    refreshStock: async (_: any, { ticker }: { ticker: string }): Promise<Stock> => {
+    refreshStock: async (_: unknown, { ticker }: { ticker: string }): Promise<Stock> => {
       try {
         
         // Get fresh price data from Finnhub

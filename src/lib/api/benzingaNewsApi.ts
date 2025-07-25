@@ -355,7 +355,7 @@ export async function fetchMultipleBenzingaNews(
             newsMap[ticker] = news;
         });
         
-        const totalNews = Object.values(newsMap).reduce((sum, news) => sum + news.length, 0);
+        // const totalNews = Object.values(newsMap).reduce((sum, news) => sum + news.length, 0);
         
         return newsMap;
         
