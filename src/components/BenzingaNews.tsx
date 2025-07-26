@@ -13,19 +13,31 @@ interface BenzingaNewsProps {
  * Displays news articles specifically from Benzinga API in a dedicated section
  */
 export function BenzingaNews({ stocks }: BenzingaNewsProps) {
+    // DEBUG: Log input data
+    console.log(`🔍 DEBUG - BenzingaNews received ${stocks.length} stocks:`, stocks.map(s => ({
+        ticker: s.ticker,
+        summariesCount: s.summaries.length,
+        summariesSources: s.summaries.map(sum => sum.source)
+    })));
+
     // Collect only Benzinga news from TSLA and OKLO (exclude QQQ)
-    const allBenzingaNews = stocks
-        .filter(stock => stock.ticker === 'TSLA' || stock.ticker === 'OKLO')
+    const filteredStocks = stocks.filter(stock => stock.ticker === 'TSLA' || stock.ticker === 'OKLO');
+    console.log(`🔍 DEBUG - Filtered to ${filteredStocks.length} stocks (TSLA/OKLO only)`);
+    
+    const allBenzingaNews = filteredStocks
         .flatMap(stock => {
-            return stock.summaries
-                .filter(summary => summary.source === 'Benzinga')
-                .map(summary => ({
+            const benzingaSummaries = stock.summaries.filter(summary => summary.source === 'Benzinga');
+            console.log(`🔍 DEBUG - ${stock.ticker} has ${benzingaSummaries.length} Benzinga articles out of ${stock.summaries.length} total`);
+            
+            return benzingaSummaries.map(summary => ({
                 ...summary,
                 ticker: stock.ticker,
                 logo: stock.logo,
-                }));
+            }));
         })
         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    
+    console.log(`🔍 DEBUG - Total Benzinga news articles found: ${allBenzingaNews.length}`);
 
     // Remove duplicates based on ID
     const uniqueNews = allBenzingaNews.filter((news, index, array) => 

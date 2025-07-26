@@ -146,19 +146,30 @@ export async function fetchBenzingaNews(
         // Check if we have a Benzinga API key
         const apiKey = process.env.BENZINGA_API_KEY;
         
+        // DEBUG: Log API key status
+        console.log(`🔍 DEBUG - BENZINGA API KEY for ${ticker}:`, apiKey ? 'EXISTS' : 'MISSING');
+        
         if (apiKey) {
             // Use the REST API if we have a key
-            return await fetchBenzingaRestAPI(ticker, currentPrice, apiKey);
+            console.log(`🔍 DEBUG - Fetching from Benzinga REST API for ${ticker}`);
+            const result = await fetchBenzingaRestAPI(ticker, currentPrice, apiKey);
+            console.log(`🔍 DEBUG - Benzinga REST API returned ${result.length} articles for ${ticker}`);
+            return result;
         } else {
             // Use simulation for now (you can implement RSS parsing here)
-            return await simulateBenzingaNews(ticker);
+            console.log(`🔍 DEBUG - Using simulation for ${ticker} (no API key)`);
+            const result = await simulateBenzingaNews(ticker);
+            console.log(`🔍 DEBUG - Simulation returned ${result.length} articles for ${ticker}`);
+            return result;
         }
         
     } catch (error) {
-        console.warn(`⚠️ Failed to fetch Benzinga news for ${ticker}:`, error);
+        console.error(`❌ DEBUG - Failed to fetch Benzinga news for ${ticker}:`, error);
         // Return cached news if available, empty array otherwise
         const cached = newsCache.get(ticker);
-        return cached?.data || [];
+        const fallbackResult = cached?.data || [];
+        console.log(`🔍 DEBUG - Returning cached/fallback: ${fallbackResult.length} articles for ${ticker}`);
+        return fallbackResult;
     }
 }
 
