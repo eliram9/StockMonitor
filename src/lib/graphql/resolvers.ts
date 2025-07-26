@@ -54,13 +54,19 @@ export const resolvers = {
         });
         
         // Get Benzinga news for all tickers
+        console.log(`🔍 DEBUG - GraphQL: Fetching news for tickers:`, tickers);
         const benzingaNewsMap = await fetchMultipleBenzingaNews(tickers, currentPrices, false);
+        console.log(`🔍 DEBUG - GraphQL: Raw news map received:`, Object.keys(benzingaNewsMap).map(ticker => ({
+          ticker,
+          newsCount: benzingaNewsMap[ticker].length
+        })));
         
         // Combine prices and news
         const combinedResult: Stock[] = priceDataArray.map(priceData => {
           const benzingaNews = benzingaNewsMap[priceData.ticker] || [];
           const benzingaSummaries = convertToSummaries(benzingaNews);
           
+          console.log(`🔍 DEBUG - GraphQL: ${priceData.ticker} - Raw: ${benzingaNews.length}, Converted: ${benzingaSummaries.length}`);
           
           return {
             ...priceData,
@@ -68,7 +74,8 @@ export const resolvers = {
           };
         });
         
-        // const totalNews = combinedResult.reduce((sum, stock) => sum + stock.summaries.length, 0);
+        const totalNews = combinedResult.reduce((sum, stock) => sum + stock.summaries.length, 0);
+        console.log(`🔍 DEBUG - GraphQL: Final result - Total news across all stocks: ${totalNews}`);
         
         return combinedResult;
         
