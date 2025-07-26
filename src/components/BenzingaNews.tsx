@@ -38,6 +38,16 @@ export function BenzingaNews({ stocks }: BenzingaNewsProps) {
         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     
     console.log(`🔍 DEBUG - Total Benzinga news articles found: ${allBenzingaNews.length}`);
+    
+    // DEBUG: Log article timestamps to check if they're recent
+    if (allBenzingaNews.length > 0) {
+        console.log(`🔍 DEBUG - Article timestamps:`, allBenzingaNews.slice(0, 3).map(article => ({
+            ticker: article.ticker,
+            timestamp: article.timestamp,
+            age: Math.round((Date.now() - new Date(article.timestamp).getTime()) / (1000 * 60 * 60)) + ' hours ago',
+            headline: article.headlines[0]?.substring(0, 50) + '...'
+        })));
+    }
 
     // Remove duplicates based on ID
     const uniqueNews = allBenzingaNews.filter((news, index, array) => 
