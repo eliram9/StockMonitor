@@ -211,6 +211,7 @@ body {
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
+
 /* News card */
 .bg-ai-button {
     background-color: #1f2937; /* Default */
@@ -227,13 +228,14 @@ body {
 /* End News card */
 
 
+/* SummarizeModal */
 .modal-text {
     color: var(--color-gray-900);
 }
 
 .dark .modal-text {
-    color: var(--color-gray-400);
+    color: var(--color-gray-100);
 }
 
 
-/* End Modal */
+/* End SummarizeModal */

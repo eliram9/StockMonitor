@@ -11,12 +11,15 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en" suppressHydrationWarning> {/* ADD THIS */}
-            <body>
-                <ThemeProvider 
-                    attribute="class" 
-                    defaultTheme="light" 
-                    enableSystem={false}
+        <html lang="en" suppressHydrationWarning>
+            <head>
+                <title>StockMonitor</title>
+                <meta name="description" content="Monitor your favorite stocks with real-time data and analytics" />
+            </head>
+            <body suppressHydrationWarning>
+                <ThemeProvider attribute="class" 
+                               defaultTheme="light" 
+                               enableSystem={false}
                 >
                     <ApolloProvider client={apolloClient}>
                         {children}

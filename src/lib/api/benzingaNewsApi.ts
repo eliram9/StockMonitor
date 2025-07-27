@@ -99,13 +99,11 @@ function shouldRefreshNews(ticker: string, currentPrice: number): boolean {
     
     // No cache exists - fetch news
     if (!cached) {
-        console.log(`📰 No news cache for ${ticker}, fetching fresh news`);
         return true;
     }
     
     // Cache expired (15 minutes)
     if (now - cached.timestamp > NEWS_CACHE_DURATION) {
-        console.log(`⏰ News cache expired for ${ticker} (${Math.round((now - cached.timestamp)/60000)} mins old)`);
         return true;
     }
     
@@ -114,7 +112,6 @@ function shouldRefreshNews(ticker: string, currentPrice: number): boolean {
     if (lastPrice > 0) {
         const changePercent = Math.abs((currentPrice - lastPrice) / lastPrice) * 100;
         if (changePercent >= SIGNIFICANT_CHANGE_THRESHOLD) {
-            console.log(`🚨 Significant price change for ${ticker}: ${changePercent.toFixed(1)}% - refreshing news`);
             return true;
         }
     }
@@ -140,31 +137,39 @@ export async function fetchBenzingaNews(
     if (!forceRefresh && !shouldRefreshNews(ticker, currentPrice)) {
         const cached = newsCache.get(ticker);
         if (cached) {
-            console.log(`📰 Using cached Benzinga news for ${ticker} (${cached.data.length} articles)`);
             return cached.data;
         }
     }
     
-    console.log(`📰 Fetching fresh Benzinga news for ${ticker}...`);
     
     try {
         // Check if we have a Benzinga API key
         const apiKey = process.env.BENZINGA_API_KEY;
         
+        // DEBUG: Log API key status
+        console.log(`🔍 DEBUG - BENZINGA API KEY for ${ticker}:`, apiKey ? 'EXISTS' : 'MISSING');
+        
         if (apiKey) {
             // Use the REST API if we have a key
-            return await fetchBenzingaRestAPI(ticker, currentPrice, apiKey);
+            console.log(`🔍 DEBUG - Fetching from Benzinga REST API for ${ticker}`);
+            const result = await fetchBenzingaRestAPI(ticker, currentPrice, apiKey);
+            console.log(`🔍 DEBUG - Benzinga REST API returned ${result.length} articles for ${ticker}`);
+            return result;
         } else {
             // Use simulation for now (you can implement RSS parsing here)
-            console.log(`⚠️ No BENZINGA_API_KEY found, using simulated news for ${ticker}`);
-            return await simulateBenzingaNews(ticker);
+            console.log(`🔍 DEBUG - Using simulation for ${ticker} (no API key)`);
+            const result = await simulateBenzingaNews(ticker);
+            console.log(`🔍 DEBUG - Simulation returned ${result.length} articles for ${ticker}`);
+            return result;
         }
         
     } catch (error) {
-        console.warn(`⚠️ Failed to fetch Benzinga news for ${ticker}:`, error);
+        console.error(`❌ DEBUG - Failed to fetch Benzinga news for ${ticker}:`, error);
         // Return cached news if available, empty array otherwise
         const cached = newsCache.get(ticker);
-        return cached?.data || [];
+        const fallbackResult = cached?.data || [];
+        console.log(`🔍 DEBUG - Returning cached/fallback: ${fallbackResult.length} articles for ${ticker}`);
+        return fallbackResult;
     }
 }
 
@@ -202,11 +207,9 @@ async function fetchBenzingaRestAPI(
         `https://api.benzinga.com/api/v2/news?symbols=${ticker}&token=${apiKey}&pageSize=10&format=json`,
     ];
     
-    console.log(`🔍 Trying ${urlVariations.length} different URL formats for ${ticker}...`);
     
     for (let i = 0; i < urlVariations.length; i++) {
         const url = urlVariations[i];
-        console.log(`🧪 Attempt ${i + 1}: ${url.replace(apiKey, 'xxx')}`);
         
         try {
             const response = await fetch(url, {
@@ -215,7 +218,6 @@ async function fetchBenzingaRestAPI(
                     'Content-Type': 'application/json'
                 }
             });
-            console.log(`📡 Response ${i + 1}: Status ${response.status}`);
             
             if (!response.ok) {
                 const errorText = await response.text();
@@ -225,7 +227,6 @@ async function fetchBenzingaRestAPI(
             
             // Check if response is actually JSON
             const contentType = response.headers.get('content-type');
-            console.log(`📄 Content-Type ${i + 1}: ${contentType}`);
             
             if (!contentType || !contentType.includes('application/json')) {
                 const responseText = await response.text();
@@ -234,25 +235,14 @@ async function fetchBenzingaRestAPI(
             }
             
             const data: BenzingaNewsItem[] = await response.json();
-            console.log(`📰 URL ${i + 1} returned ${data.length} articles`);
             
             if (data.length === 0) {
-                console.log(`🔍 URL ${i + 1}: No articles found, trying next format...`);
                 continue; // Try next URL
             }
             
             // Success! We got articles
-            console.log(`✅ URL ${i + 1} SUCCESS: Found ${data.length} articles`);
             
             // Log sample article for debugging
-            if (data.length > 0) {
-                console.log(`📄 Sample article from URL ${i + 1}:`, {
-                    id: data[0].id,
-                    title: data[0].title?.substring(0, 80) + '...',
-                    created: data[0].created,
-                    stocks: data[0].stocks || 'no stocks field'
-                });
-            }
             
             // Process the articles - for format 5 (general news), filter by ticker if possible
             let relevantData = data;
@@ -263,7 +253,6 @@ async function fetchBenzingaRestAPI(
                     item.title?.toUpperCase().includes(ticker.toUpperCase()) ||
                     item.teaser?.toUpperCase().includes(ticker.toUpperCase())
                 );
-                console.log(`🔍 Filtered general news: ${relevantData.length} relevant articles for ${ticker}`);
             }
             
             const summaries: ProcessedNewsSummary[] = relevantData
@@ -286,7 +275,6 @@ async function fetchBenzingaRestAPI(
                 lastPrice: currentPrice
             });
             
-            console.log(`✅ Fresh Benzinga news cached for ${ticker} (${summaries.length} articles) using URL format ${i + 1}`);
             return summaries;
             
         } catch (error) {
@@ -350,7 +338,6 @@ async function simulateBenzingaNews(ticker: string): Promise<ProcessedNewsSummar
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 300));
     
-    console.log(`✅ Simulated Benzinga news for ${ticker} (${simulatedArticles.length} articles)`);
     return simulatedArticles;
 }
 
@@ -362,7 +349,6 @@ export async function fetchMultipleBenzingaNews(
     currentPrices: Record<string, number> = {},
     forceRefresh: boolean = false
 ): Promise<Record<string, ProcessedNewsSummary[]>> {
-    console.log(`📊 Fetching Benzinga news for ${tickers.length} stocks: ${tickers.join(', ')}`);
     
     try {
         // Fetch all news in parallel
@@ -380,8 +366,7 @@ export async function fetchMultipleBenzingaNews(
             newsMap[ticker] = news;
         });
         
-        const totalNews = Object.values(newsMap).reduce((sum, news) => sum + news.length, 0);
-        console.log(`✅ Benzinga news fetch complete: ${totalNews} total articles`);
+        // const totalNews = Object.values(newsMap).reduce((sum, news) => sum + news.length, 0);
         
         return newsMap;
         
@@ -414,7 +399,6 @@ export async function forceRefreshBenzingaNews(
     tickers: string[], 
     currentPrices: Record<string, number> = {}
 ): Promise<void> {
-    console.log(`🔄 Force refreshing Benzinga news for: ${tickers.join(', ')}`);
     
     for (const ticker of tickers) {
         const currentPrice = currentPrices[ticker] || 0;

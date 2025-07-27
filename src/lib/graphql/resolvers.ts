@@ -4,14 +4,19 @@ import { fetchStockPrice, fetchMultipleStockPrices, fetchStock as fetchFinnhubSt
 import { fetchBenzingaNews, fetchMultipleBenzingaNews, convertToSummaries } from '../api/benzingaNewsApi';
 import type { Stock } from './types';
 
+// Define GraphQL resolver context interface
+interface GraphQLContext {
+  req: Request;
+  params?: Record<string, unknown>;
+}
+
 export const resolvers = {
   Query: {
     /**
      * Get a single stock - Prices from Finnhub + News from Benzinga
      */
-    stock: async (_: any, { ticker }: { ticker: string }): Promise<Stock> => {
+    stock: async (_: unknown, { ticker }: { ticker: string }): Promise<Stock> => {
       try {
-        console.log(`🔍 GraphQL: Fetching stock data for ${ticker} (Finnhub prices + Benzinga news)`);
         
         // Get price data from Finnhub
         const priceData = await fetchStockPrice(ticker);
@@ -25,7 +30,6 @@ export const resolvers = {
           summaries: benzingaSummaries
         };
         
-        console.log(`✅ GraphQL: Stock ${ticker} resolved with ${benzingaSummaries.length} Benzinga news articles`);
         return result;
         
       } catch (error) {
@@ -37,9 +41,8 @@ export const resolvers = {
     /**
      * Get multiple stocks - Prices from Finnhub + News from Benzinga
      */
-    stocks: async (_: any, { tickers }: { tickers: string[] }): Promise<Stock[]> => {
+    stocks: async (_: unknown, { tickers }: { tickers: string[] }): Promise<Stock[]> => {
       try {
-        console.log(`🔍 GraphQL: Fetching stocks data for ${tickers.length} tickers (Finnhub prices + Benzinga news): ${tickers.join(', ')}`);
         
         // FIXED: Get price data from Finnhub (returns array, not object)
         const priceDataArray = await fetchMultipleStockPrices(tickers);
@@ -51,14 +54,19 @@ export const resolvers = {
         });
         
         // Get Benzinga news for all tickers
+        console.log(`🔍 DEBUG - GraphQL: Fetching news for tickers:`, tickers);
         const benzingaNewsMap = await fetchMultipleBenzingaNews(tickers, currentPrices, false);
+        console.log(`🔍 DEBUG - GraphQL: Raw news map received:`, Object.keys(benzingaNewsMap).map(ticker => ({
+          ticker,
+          newsCount: benzingaNewsMap[ticker].length
+        })));
         
         // Combine prices and news
         const combinedResult: Stock[] = priceDataArray.map(priceData => {
           const benzingaNews = benzingaNewsMap[priceData.ticker] || [];
           const benzingaSummaries = convertToSummaries(benzingaNews);
           
-          console.log(`📰 ${priceData.ticker}: ${benzingaSummaries.length} Benzinga articles`);
+          console.log(`🔍 DEBUG - GraphQL: ${priceData.ticker} - Raw: ${benzingaNews.length}, Converted: ${benzingaSummaries.length}`);
           
           return {
             ...priceData,
@@ -67,7 +75,7 @@ export const resolvers = {
         });
         
         const totalNews = combinedResult.reduce((sum, stock) => sum + stock.summaries.length, 0);
-        console.log(`✅ GraphQL: ${combinedResult.length} stocks resolved with ${totalNews} total Benzinga news articles`);
+        console.log(`🔍 DEBUG - GraphQL: Final result - Total news across all stocks: ${totalNews}`);
         
         return combinedResult;
         
@@ -80,9 +88,8 @@ export const resolvers = {
     /**
      * NEW: Test Benzinga news for a single stock
      */
-    stockWithBenzingaNews: async (_: any, { ticker }: { ticker: string }): Promise<Stock> => {
+    stockWithBenzingaNews: async (_: unknown, { ticker }: { ticker: string }): Promise<Stock> => {
       try {
-        console.log(`🔍 GraphQL: Testing Benzinga news for ${ticker}`);
         
         // Get price data from Finnhub
         const priceData = await fetchStockPrice(ticker);
@@ -96,7 +103,6 @@ export const resolvers = {
           summaries
         };
         
-        console.log(`✅ GraphQL: ${ticker} with Benzinga news - ${summaries.length} articles`);
         return result;
         
       } catch (error) {
@@ -108,9 +114,8 @@ export const resolvers = {
     /**
      * NEW: Compare Finnhub vs Benzinga news
      */
-    compareNews: async (_: any, { ticker }: { ticker: string }) => {
+    compareNews: async (_: unknown, { ticker }: { ticker: string }) => {
       try {
-        console.log(`🔍 GraphQL: Comparing news sources for ${ticker}`);
         
         // Get Finnhub data (complete with news)
         const finnhubData = await fetchFinnhubStock(ticker, true, false);
@@ -133,7 +138,6 @@ export const resolvers = {
           }
         };
         
-        console.log(`✅ GraphQL: News comparison for ${ticker} - Finnhub: ${comparison.comparison.finnhubCount}, Benzinga: ${comparison.comparison.benzingaCount}`);
         return comparison;
         
       } catch (error) {
@@ -147,7 +151,6 @@ export const resolvers = {
      */
     benzingaHealth: async () => {
       try {
-        console.log('🔍 GraphQL: Testing Benzinga API health');
         
         // Test with AAPL
         const testNews = await fetchBenzingaNews('AAPL', 150, false);
@@ -160,7 +163,6 @@ export const resolvers = {
           sampleHeadline: testNews[0]?.headlines[0] || 'No news available'
         };
         
-        console.log(`✅ GraphQL: Benzinga API healthy - ${health.articlesReturned} articles`);
         return health;
         
       } catch (error) {
@@ -179,9 +181,8 @@ export const resolvers = {
     /**
      * Force refresh stock data - Prices from Finnhub + News from Benzinga
      */
-    refreshStock: async (_: any, { ticker }: { ticker: string }): Promise<Stock> => {
+    refreshStock: async (_: unknown, { ticker }: { ticker: string }): Promise<Stock> => {
       try {
-        console.log(`🔄 GraphQL: Force refreshing ${ticker} (Finnhub prices + Benzinga news)`);
         
         // Get fresh price data from Finnhub
         const priceData = await fetchStockPrice(ticker);
@@ -195,7 +196,6 @@ export const resolvers = {
           summaries: benzingaSummaries
         };
         
-        console.log(`✅ GraphQL: ${ticker} refreshed with ${benzingaSummaries.length} Benzinga articles`);
         return result;
         
       } catch (error) {

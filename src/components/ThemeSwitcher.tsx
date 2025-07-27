@@ -40,7 +40,7 @@ const MoonIcon = () => (
 
 export function ThemeSwitcher() {
   const [mounted, setMounted] = useState(false);
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -60,7 +60,6 @@ export function ThemeSwitcher() {
 
   const toggleTheme = () => {
     const newTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
-    console.log('Setting theme to:', newTheme);
     setTheme(newTheme);
   };
 
