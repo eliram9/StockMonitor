@@ -28,8 +28,6 @@ export function BenzingaNews({ stocks }: BenzingaNewsProps) {
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
     .slice(0, 6); // Show only the 6 most recent Benzinga articles
 
-  // Debug: Log the Benzinga articles
-  console.log('📰 Benzinga News Articles:', JSON.stringify(benzingaNews, null, 2));
 
   // If no Benzinga news available
   if (benzingaNews.length === 0) {
