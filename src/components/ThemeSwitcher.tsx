@@ -50,7 +50,7 @@ export function ThemeSwitcher() {
   if (!mounted) {
     return (
       <button
-        className="px-4 py-2 h-10 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+        className="px-4 py-2 h-11 sm:h-10 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors touch-manipulation min-w-[44px] flex items-center justify-center"
         disabled
       >
         <div className="w-5 h-5" />
@@ -66,7 +66,7 @@ export function ThemeSwitcher() {
   return (
     <button
       onClick={toggleTheme}
-      className="px-4 py-2 h-10 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
+      className="px-4 py-2 h-11 sm:h-10 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer touch-manipulation min-w-[44px] flex items-center justify-center"
       aria-label={`Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode`}
     >
       {resolvedTheme === 'dark' ? <SunIcon /> : <MoonIcon />}

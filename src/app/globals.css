@@ -211,6 +211,24 @@ body {
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
+/* Touch-friendly interactions */
+.touch-manipulation {
+    touch-action: manipulation;
+}
+
+/* Responsive font scaling for better mobile readability */
+@media (max-width: 640px) {
+    .text-2xl {
+        font-size: 1.25rem;
+        line-height: 1.75rem;
+    }
+    
+    .text-xl {
+        font-size: 1.125rem; 
+        line-height: 1.75rem;
+    }
+}
+
 
 /* News card */
 .bg-ai-button {
