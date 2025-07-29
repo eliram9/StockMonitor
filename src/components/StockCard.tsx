@@ -36,19 +36,19 @@ export function StockCard({ stock, isMarketOpen }: StockCardProps) {
     };
 
     return (
-        <div className={`bg-white rounded-lg shadow-lg p-6 border-l-8 ${borderColor} hover:shadow-xl transition-shadow`}>
+        <div className={`bg-white rounded-lg shadow-lg p-4 md:p-5 lg:p-6 border-l-8 ${borderColor} hover:shadow-xl transition-shadow`}>
             {/* Company Header with Logo and Info */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
+            <div className="flex items-center justify-between mb-3 md:mb-4">
+                <div className="flex items-center space-x-2 md:space-x-3 lg:space-x-4 min-w-0 flex-1">
                     {/* Company Logo */}
                     {stock.logo && (
-                        <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
+                        <div className="w-10 h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                             <Image
                                 src={stock.logo}
                                 alt={`${stock.name} logo`}
                                 width={48}
                                 height={48}
-                                className="object-contain"
+                                className="object-contain w-full h-full"
                                 onError={(e) => {
                                     // Hide image on error and show ticker instead
                                     e.currentTarget.style.display = 'none';
@@ -62,10 +62,10 @@ export function StockCard({ stock, isMarketOpen }: StockCardProps) {
                     )}
                     
                     {/* Company Name and Ticker */}
-                    <div className="flex flex-col">
-                        <h2 className="text-xl font-bold text-gray-900">{stock.ticker}</h2>
+                    <div className="flex flex-col min-w-0 flex-1">
+                        <h2 className="text-lg md:text-xl lg:text-xl font-bold text-gray-900 truncate leading-tight">{stock.ticker}</h2>
                         {stock.name && (
-                            <p className="text-sm text-gray-600 truncate max-w-[200px]">
+                            <p className="text-xs md:text-sm lg:text-sm text-gray-600 truncate mt-0.5">
                                 {stock.name}
                             </p>
                         )}
@@ -73,27 +73,27 @@ export function StockCard({ stock, isMarketOpen }: StockCardProps) {
                 </div>
                 
                 {/* Live Status Badge */}
-                <div className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadgeStyles()}`}>
-                    {isPositive ? '↗' : '↘'} {isMarketOpen ? 'LIVE' : 'OFF'}
+                <div className={`px-2 md:px-3 py-1 rounded text-xs md:text-xs font-medium flex-shrink-0 ${getStatusBadgeStyles()}`}>
+                    <span className="md:inline whitespace-nowrap">{isPositive ? '↗' : '↘'} {isMarketOpen ? 'LIVE' : 'OFF'}</span>
                 </div>
             </div>
 
             {/* Current Price */}
-            <div className="mb-2">
-                <p className="text-3xl font-bold text-gray-900">
+            <div className="mb-2 md:mb-3">
+                <p className="text-2xl md:text-2xl lg:text-3xl font-bold text-gray-900 leading-none">
                     ${stock.price.toFixed(2)}
                 </p>
             </div>
 
             {/* Change Information */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3 md:space-x-4 lg:space-x-5">
                 {/* Dollar Change */}
-                <div className={`${changeColor} font-semibold`}>
+                <div className={`${changeColor} font-semibold text-sm md:text-sm lg:text-base leading-tight`}>
                     {isPositive ? '+' : ''}${stock.change.toFixed(2)}
                 </div>
                 
                 {/* Percentage Change */}
-                <div className={`${changeColor} font-semibold`}>
+                <div className={`${changeColor} font-semibold text-sm md:text-sm lg:text-base leading-tight`}>
                     {isPositive ? '+' : ''}{stock.changePercent.toFixed(2)}%
                 </div>
             </div>

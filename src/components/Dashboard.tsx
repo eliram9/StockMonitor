@@ -53,20 +53,20 @@ const MarketStatusIndicator = React.memo<MarketStatusIndicatorProps>(({ isMarket
   };
 
   return (
-    <div className={`flex items-center space-x-2 px-4 py-2 h-10 rounded-lg border ${
+    <div className={`flex items-center justify-center sm:justify-start space-x-2 px-3 sm:px-4 py-2 h-11 sm:h-10 rounded-lg border w-full sm:w-auto touch-manipulation ${
       isMarketOpen 
         ? 'bg-green-50 border-green-200 text-green-700' 
         : 'bg-gray-50 border-gray-200 text-gray-600'
     }`}>
-      <div className={`w-2 h-2 rounded-full ${
+      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
         isMarketOpen ? 'bg-green-500' : 'bg-gray-400'
       }`}></div>
-      <div className="flex flex-col">
-        <span className="text-sm font-medium">
+      <div className="flex flex-col min-w-0">
+        <span className="text-sm font-medium leading-tight">
           {isMarketOpen ? 'Market is On' : 'Market is Off'}
         </span>
         {!isMarketOpen && (
-          <span className="text-xs">
+          <span className="text-xs leading-tight truncate">
             Opens in {formatCountdown()}
           </span>
         )}
@@ -202,51 +202,59 @@ export function Dashboard() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
+          {/* Mobile-first responsive layout */}
+          <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
             {/* Title Section */}
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+            <div className="text-center sm:text-left">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
                 {DASHBOARD_CONFIG.title}
               </h1>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 mt-1">
                 {DASHBOARD_CONFIG.subtitle}
               </p>
             </div>
             
             {/* Status and Controls Section */}
-            <div className="flex items-center space-x-4">
-              {/* Market Status Indicator */}
-              <MarketStatusIndicator isMarketOpen={isMarketOpen} />
+            <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
+              {/* Market Status Indicator - Full width on mobile */}
+              <div className="w-full sm:w-auto">
+                <MarketStatusIndicator isMarketOpen={isMarketOpen} />
+              </div>
               
               {/* Loading Indicator */}
               {loading && (
-                <div className="flex items-center text-primary-600">
+                <div className="flex items-center justify-center sm:justify-start text-primary-600">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600 mr-2"></div>
                   <span className="text-sm">Updating...</span>
                 </div>
               )}
               
-              {/* Refresh Button */}
-              <button
-                onClick={handleRefresh}
-                disabled={loading}
-                className="bg-primary-600 text-white px-4 py-2 h-10 rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors cursor-pointer"
-                aria-label="Refresh stock data"
-              >
-                Refresh
-              </button>
-              
-              {/* Theme Switcher */}
-              <ThemeSwitcher />
+              {/* Action Buttons Row */}
+              <div className="flex items-center justify-center space-x-3 sm:space-x-4">
+                {/* Refresh Button */}
+                <button
+                  onClick={handleRefresh}
+                  disabled={loading}
+                  className="bg-primary-600 text-white px-4 py-2 h-11 sm:h-10 rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors cursor-pointer text-sm font-medium min-w-[80px] touch-manipulation"
+                  aria-label="Refresh stock data"
+                >
+                  Refresh
+                </button>
+                
+                {/* Theme Switcher */}
+                <div className="flex-shrink-0">
+                  <ThemeSwitcher />
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
         {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
             {/* Stock Cards Grid */}
-            <div className="grid md:grid-cols-3 gap-8 mb-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8 mb-8">
                 {stocks.map((stock) => (
                     <StockCard key={stock.ticker} 
                                stock={stock} 
