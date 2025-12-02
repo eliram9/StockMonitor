@@ -194,14 +194,30 @@ async function fetchCompanyProfile(ticker: string, apiKey: string): Promise<{ na
             name: 'Bitcoin',
             logo: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png'
         };
-        
+
         // Cache Bitcoin profile
         companyCache.set(ticker, {
             profile: bitcoinProfile,
             timestamp: Date.now()
         });
-        
+
         return bitcoinProfile;
+    }
+
+    // Handle Gold ETF (GLD) with custom branding - represents ~0.09 oz of gold
+    if (ticker === 'GLD') {
+        const goldProfile = {
+            name: 'Gold (per oz)',
+            logo: 'https://logo.clearbit.com/spdrgoldshares.com'
+        };
+
+        // Cache Gold profile
+        companyCache.set(ticker, {
+            profile: goldProfile,
+            timestamp: Date.now()
+        });
+
+        return goldProfile;
     }
     
     const url = `https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${apiKey}`;
@@ -269,21 +285,29 @@ export async function fetchStockPrice(ticker: string): Promise<Omit<Stock, 'summ
             throw new Error(`No price data available for ticker ${ticker}`);
         }
         
-        const price = data.c;
-        const change = data.d;
+        let price = data.c;
+        let change = data.d;
         const changePercent = data.dp;
-        
+
         if (isNaN(price) || isNaN(change) || isNaN(changePercent)) {
             throw new Error(`Invalid numeric data received for ${ticker}`);
         }
-        
+
+        // Special handling for GLD - convert to gold spot price (per troy ounce)
+        // GLD represents approximately 1/10.94 of an ounce of gold
+        if (ticker === 'GLD') {
+            const goldConversionRatio = 10.94;
+            price = price * goldConversionRatio;
+            change = change * goldConversionRatio;
+        }
+
         // Fetch company profile (with 24-hour caching)
         const companyProfile = await fetchCompanyProfile(ticker, apiKey);
-        
+
         // Store price for change detection
         priceHistory.set(ticker, price);
-        
-        
+
+
         return {
             ticker,
             price,
