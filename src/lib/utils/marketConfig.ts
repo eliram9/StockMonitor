@@ -29,7 +29,7 @@ export const MARKET_CONFIG = {
     TIMEZONE: 'America/New_York',
     
     // Default Tickers
-    DEFAULT_TICKERS: ['TSLA', 'OKLO', 'QQQ'],
+    DEFAULT_TICKERS: ['TSLA', 'OKLO', 'QQQ', 'GLD'],
     
     // API Settings
     API: {
