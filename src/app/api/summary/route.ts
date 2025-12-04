@@ -35,10 +35,10 @@ export async function POST(request: NextRequest) {
     }
 
 
-    const openaiApiKey = process.env.OPENAI_API_KEY;
-    if (!openaiApiKey) {
+    const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
+    if (!anthropicApiKey) {
       return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
+        { error: 'Anthropic API key not configured' },
         { status: 500 }
       );
     }
@@ -76,44 +76,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 2: Summarize with OpenAI using extracted prompt
-    
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Step 2: Summarize with Claude using extracted prompt
+
+    const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
+        'x-api-key': anthropicApiKey,
+        'anthropic-version': '2023-06-01',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "claude-sonnet-4-5-20250929",
+        max_tokens: 1024,
+        system: SYSTEM_PROMPT,
         messages: [
-          {
-            role: 'system',
-            content: SYSTEM_PROMPT
-          },
           {
             role: 'user',
             content: `Please summarize this financial news article using the structured format above:\n\n${articleContent.substring(0, 4000)}`
           }
         ],
-        max_tokens: 350,
         temperature: 0.4,
       }),
     });
 
 
-    if (!openaiResponse.ok) {
-      const errorData = await openaiResponse.json();
-      console.error('OpenAI API error:', errorData);
+    if (!anthropicResponse.ok) {
+      const errorData = await anthropicResponse.json();
+      console.error('Anthropic API error:', errorData);
       return NextResponse.json(
-        { error: `OpenAI API error: ${errorData.error?.message || 'Unknown error'}` },
+        { error: `Anthropic API error: ${errorData.error?.message || 'Unknown error'}` },
         { status: 500 }
       );
     }
 
-    const openaiData = await openaiResponse.json();
+    const anthropicData = await anthropicResponse.json();
 
-    const summary = openaiData.choices[0]?.message?.content || 'Summary could not be generated.';
+    const summary = anthropicData.content[0]?.text || 'Summary could not be generated.';
 
     // Optional: Validate that the summary follows the three-sentence structure
     const sentences = summary.trim().split(/[.!?]+/).filter((s: string) => s.length > 10);
