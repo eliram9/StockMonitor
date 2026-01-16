@@ -171,23 +171,23 @@ async function fetchCompanyProfile(ticker: string, apiKey: string): Promise<{ na
     if (cached && (Date.now() - cached.timestamp) < COMPANY_CACHE_DURATION) {
         return cached.profile;
     }
-    
+
     // Handle special tickers with custom branding
     if (ticker === 'QQQ') {
         const qqqProfile = {
             name: 'Invesco QQQ Trust',
-            logo: 'https://logo.clearbit.com/invesco.com'
+            logo: 'https://www.marketbeat.com/logos/invesco-qqq-logo.png?v=20231212200553'
         };
-        
+
         // Cache QQQ profile
         companyCache.set(ticker, {
             profile: qqqProfile,
             timestamp: Date.now()
         });
-        
+
         return qqqProfile;
     }
-    
+
     // Handle Bitcoin/Crypto tickers with custom branding
     if (ticker.includes('BTC') || ticker.includes('BITCOIN') || ticker.includes('BTCUSDT')) {
         const bitcoinProfile = {

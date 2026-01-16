@@ -42,22 +42,37 @@ export function StockCard({ stock, isMarketOpen }: StockCardProps) {
                 <div className="flex items-center space-x-2 md:space-x-3 lg:space-x-4 min-w-0 flex-1">
                     {/* Company Logo */}
                     {stock.logo && (
-                        <div className="w-10 h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
-                            <Image
-                                src={stock.logo}
-                                alt={`${stock.name} logo`}
-                                width={48}
-                                height={48}
-                                className="object-contain w-full h-full"
-                                onError={(e) => {
-                                    // Hide image on error and show ticker instead
-                                    e.currentTarget.style.display = 'none';
-                                }}
-                            />
-                            {/* Fallback: Show ticker if logo fails */}
-                            <div className="text-xs font-bold text-gray-600 absolute">
-                                {!stock.logo && stock.ticker}
-                            </div>
+                        <div className={`w-10 h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0 ${
+                            stock.ticker === 'GLD' ? 'bg-[#B8860B]' :
+                            stock.ticker === 'QQQ' ? 'bg-[#02317C]' :
+                            'bg-gray-100'
+                        }`}>
+                            {stock.ticker === 'GLD' ? (
+                                // Show GLD text for gold card
+                                <div className="text-sm md:text-base font-bold text-white">
+                                    GLD
+                                </div>
+                            ) : (
+                                <>
+                                    <Image
+                                        src={stock.logo}
+                                        alt={`${stock.name} logo`}
+                                        width={48}
+                                        height={48}
+                                        className={`object-contain w-full h-full ${
+                                            stock.ticker === 'QQQ' ? 'p-2 brightness-0 invert' : ''
+                                        }`}
+                                        onError={(e) => {
+                                            // Hide image on error and show ticker instead
+                                            e.currentTarget.style.display = 'none';
+                                        }}
+                                    />
+                                    {/* Fallback: Show ticker if logo fails */}
+                                    <div className="text-xs font-bold text-gray-600 absolute">
+                                        {!stock.logo && stock.ticker}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     )}
                     
