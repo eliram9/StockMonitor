@@ -1,37 +1,20 @@
-// Fixed GraphQL resolvers - Finnhub prices + Benzinga news
+// GraphQL resolvers - Finnhub prices + Finnhub news
 
-import { fetchStockPrice, fetchMultipleStockPrices, fetchStock as fetchFinnhubStock } from '../api/stockApi';
-import { fetchBenzingaNews, fetchMultipleBenzingaNews, convertToSummaries } from '../api/benzingaNewsApi';
+import { fetchStockPrice, fetchMultipleStockPrices, fetchStockNews, fetchStock as fetchFinnhubStock } from '../api/stockApi';
 import type { Stock } from './types';
-
-// Define GraphQL resolver context interface
-interface GraphQLContext {
-  req: Request;
-  params?: Record<string, unknown>;
-}
 
 export const resolvers = {
   Query: {
     /**
-     * Get a single stock - Prices from Finnhub + News from Benzinga
+     * Get a single stock - Prices + News from Finnhub
      */
     stock: async (_: unknown, { ticker }: { ticker: string }): Promise<Stock> => {
       try {
-        
-        // Get price data from Finnhub
         const priceData = await fetchStockPrice(ticker);
-        
-        // Get news data from Benzinga
-        const benzingaNews = await fetchBenzingaNews(ticker, priceData.price, false);
-        const benzingaSummaries = convertToSummaries(benzingaNews);
-        
-        const result: Stock = {
-          ...priceData,
-          summaries: benzingaSummaries
-        };
-        
-        return result;
-        
+        const summaries = await fetchStockNews(ticker, priceData.price, false);
+
+        return { ...priceData, summaries };
+
       } catch (error) {
         console.error(`❌ GraphQL: Error resolving stock ${ticker}:`, error);
         throw new Error(`Failed to fetch stock data for ${ticker}: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -39,46 +22,24 @@ export const resolvers = {
     },
 
     /**
-     * Get multiple stocks - Prices from Finnhub + News from Benzinga
+     * Get multiple stocks - Prices + News from Finnhub
      */
     stocks: async (_: unknown, { tickers }: { tickers: string[] }): Promise<Stock[]> => {
       try {
-        
-        // FIXED: Get price data from Finnhub (returns array, not object)
         const priceDataArray = await fetchMultipleStockPrices(tickers);
-        
-        // Create price map for Benzinga news API
-        const currentPrices: Record<string, number> = {};
-        priceDataArray.forEach(stock => {
-          currentPrices[stock.ticker] = stock.price;
-        });
-        
-        // Get Benzinga news for all tickers
-        console.log(`🔍 DEBUG - GraphQL: Fetching news for tickers:`, tickers);
-        const benzingaNewsMap = await fetchMultipleBenzingaNews(tickers, currentPrices, false);
-        console.log(`🔍 DEBUG - GraphQL: Raw news map received:`, Object.keys(benzingaNewsMap).map(ticker => ({
-          ticker,
-          newsCount: benzingaNewsMap[ticker].length
-        })));
-        
-        // Combine prices and news
-        const combinedResult: Stock[] = priceDataArray.map(priceData => {
-          const benzingaNews = benzingaNewsMap[priceData.ticker] || [];
-          const benzingaSummaries = convertToSummaries(benzingaNews);
-          
-          console.log(`🔍 DEBUG - GraphQL: ${priceData.ticker} - Raw: ${benzingaNews.length}, Converted: ${benzingaSummaries.length}`);
-          
-          return {
-            ...priceData,
-            summaries: benzingaSummaries
-          };
-        });
-        
-        const totalNews = combinedResult.reduce((sum, stock) => sum + stock.summaries.length, 0);
+
+        const results: Stock[] = await Promise.all(
+          priceDataArray.map(async (priceData) => {
+            const summaries = await fetchStockNews(priceData.ticker, priceData.price, false);
+            return { ...priceData, summaries };
+          })
+        );
+
+        const totalNews = results.reduce((sum, stock) => sum + stock.summaries.length, 0);
         console.log(`🔍 DEBUG - GraphQL: Final result - Total news across all stocks: ${totalNews}`);
-        
-        return combinedResult;
-        
+
+        return results;
+
       } catch (error) {
         console.error(`❌ GraphQL: Error resolving stocks:`, error);
         throw new Error(`Failed to fetch stocks data: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -86,118 +47,44 @@ export const resolvers = {
     },
 
     /**
-     * NEW: Test Benzinga news for a single stock
-     */
-    stockWithBenzingaNews: async (_: unknown, { ticker }: { ticker: string }): Promise<Stock> => {
-      try {
-        
-        // Get price data from Finnhub
-        const priceData = await fetchStockPrice(ticker);
-        
-        // Get news data from Benzinga
-        const newsData = await fetchBenzingaNews(ticker, priceData.price);
-        const summaries = convertToSummaries(newsData);
-        
-        const result: Stock = {
-          ...priceData,
-          summaries
-        };
-        
-        return result;
-        
-      } catch (error) {
-        console.error(`❌ GraphQL: Error with Benzinga news for ${ticker}:`, error);
-        throw new Error(`Failed to fetch Benzinga news for ${ticker}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
-    },
-
-    /**
-     * NEW: Compare Finnhub vs Benzinga news
+     * Compare Finnhub news (legacy endpoint kept for compatibility)
      */
     compareNews: async (_: unknown, { ticker }: { ticker: string }) => {
       try {
-        
-        // Get Finnhub data (complete with news)
         const finnhubData = await fetchFinnhubStock(ticker, true, false);
-        
-        // Get Benzinga news only
-        const benzingaNews = await fetchBenzingaNews(ticker, finnhubData.price);
-        const benzingaSummaries = convertToSummaries(benzingaNews);
-        
-        const comparison = {
+
+        return {
           ticker,
           price: finnhubData.price,
           change: finnhubData.change,
           changePercent: finnhubData.changePercent,
           finnhubNews: finnhubData.summaries,
-          benzingaNews: benzingaSummaries,
+          benzingaNews: [],
           comparison: {
             finnhubCount: finnhubData.summaries.length,
-            benzingaCount: benzingaSummaries.length,
+            benzingaCount: 0,
             timestamp: new Date().toISOString()
           }
         };
-        
-        return comparison;
-        
+
       } catch (error) {
         console.error(`❌ GraphQL: Error comparing news for ${ticker}:`, error);
         throw new Error(`Failed to compare news for ${ticker}: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     },
-
-    /**
-     * NEW: Test Benzinga API health
-     */
-    benzingaHealth: async () => {
-      try {
-        
-        // Test with AAPL
-        const testNews = await fetchBenzingaNews('AAPL', 150, false);
-        
-        const health = {
-          status: 'healthy',
-          articlesReturned: testNews.length,
-          hasApiKey: !!process.env.BENZINGA_API_KEY,
-          timestamp: new Date().toISOString(),
-          sampleHeadline: testNews[0]?.headlines[0] || 'No news available'
-        };
-        
-        return health;
-        
-      } catch (error) {
-        console.error(`❌ GraphQL: Benzinga API unhealthy:`, error);
-        return {
-          status: 'unhealthy',
-          error: error instanceof Error ? error.message : 'Unknown error',
-          hasApiKey: !!process.env.BENZINGA_API_KEY,
-          timestamp: new Date().toISOString()
-        };
-      }
-    }
   },
 
   Mutation: {
     /**
-     * Force refresh stock data - Prices from Finnhub + News from Benzinga
+     * Force refresh stock data - Prices + News from Finnhub
      */
     refreshStock: async (_: unknown, { ticker }: { ticker: string }): Promise<Stock> => {
       try {
-        
-        // Get fresh price data from Finnhub
         const priceData = await fetchStockPrice(ticker);
-        
-        // Force refresh Benzinga news
-        const benzingaNews = await fetchBenzingaNews(ticker, priceData.price, true);
-        const benzingaSummaries = convertToSummaries(benzingaNews);
-        
-        const result: Stock = {
-          ...priceData,
-          summaries: benzingaSummaries
-        };
-        
-        return result;
-        
+        const summaries = await fetchStockNews(ticker, priceData.price, true);
+
+        return { ...priceData, summaries };
+
       } catch (error) {
         console.error(`❌ GraphQL: Error refreshing ${ticker}:`, error);
         throw new Error(`Failed to refresh stock ${ticker}: ${error instanceof Error ? error.message : 'Unknown error'}`);
