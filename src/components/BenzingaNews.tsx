@@ -8,16 +8,18 @@ interface BenzingaNewsProps {
 }
 
 export function BenzingaNews({ stocks }: BenzingaNewsProps) {
-    // Collect news from TSLA and OKLO (exclude QQQ and GLD)
+    // Collect only Benzinga news from TSLA and OKLO (exclude QQQ)
     const filteredStocks = stocks.filter(stock => stock.ticker === 'TSLA' || stock.ticker === 'OKLO');
-
-    const allNews = filteredStocks
-        .flatMap(stock =>
-            stock.summaries.map(summary => ({
-                ...summary,
-                ticker: stock.ticker,
-                logo: stock.logo,
-            }))
+    
+    const allBenzingaNews = filteredStocks
+        .flatMap(stock => 
+            stock.summaries
+                .filter(summary => summary.source === 'Benzinga')
+                .map(summary => ({
+                    ...summary,
+                    ticker: stock.ticker,
+                    logo: stock.logo,
+                }))
         )
         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
