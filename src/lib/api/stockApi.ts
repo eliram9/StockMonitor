@@ -204,6 +204,16 @@ async function fetchCompanyProfile(ticker: string, apiKey: string): Promise<{ na
         return bitcoinProfile;
     }
 
+    // Handle OKLO with custom branding (Clearbit doesn't carry their logo)
+    if (ticker === 'OKLO') {
+        const okloProfile = {
+            name: 'Oklo Inc.',
+            logo: 'https://companieslogo.com/img/orig/OKLO-e5c17c8d.png?t=1720244493'
+        };
+        companyCache.set(ticker, { profile: okloProfile, timestamp: Date.now() });
+        return okloProfile;
+    }
+
     // Handle Gold ETF (GLD) with custom branding - represents ~0.09 oz of gold
     if (ticker === 'GLD') {
         const goldProfile = {
