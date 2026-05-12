@@ -274,27 +274,31 @@ async function fetchCompanyProfile(ticker: string, apiKey: string): Promise<{ na
  * @returns Promise with price data + company info
  */
 export async function fetchStockPrice(ticker: string): Promise<Omit<Stock, 'summaries'>> {
-  
+
     const apiKey = process.env.FINNHUB_API_KEY;
     if (!apiKey) {
         throw new Error('FINNHUB_API_KEY is not set in environment variables');
     }
-  
-    const url = `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${apiKey}`;
-    
+
+    const quoteUrl = `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${apiKey}`;
+
     try {
-        const response = await fetch(url);
-        
+        // Fire price fetch and profile fetch in parallel — profile has no dependency on price
+        const [response, companyProfile] = await Promise.all([
+            fetch(quoteUrl),
+            fetchCompanyProfile(ticker, apiKey),
+        ]);
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data: FinnhubQuote = await response.json();
-        
+
         if (data.c === undefined || data.c === 0) {
             throw new Error(`No price data available for ticker ${ticker}`);
         }
-        
+
         let price = data.c;
         let change = data.d;
         const changePercent = data.dp;
@@ -311,22 +315,18 @@ export async function fetchStockPrice(ticker: string): Promise<Omit<Stock, 'summ
             change = change * goldConversionRatio;
         }
 
-        // Fetch company profile (with 24-hour caching)
-        const companyProfile = await fetchCompanyProfile(ticker, apiKey);
-
         // Store price for change detection
         priceHistory.set(ticker, price);
-
 
         return {
             ticker,
             price,
             change,
             changePercent,
-            name: companyProfile.name,      // Add company name
-            logo: companyProfile.logo,      // Add company logo
+            name: companyProfile.name,
+            logo: companyProfile.logo,
         };
-        
+
     } catch (error) {
         console.error(`❌ Error fetching price for ${ticker}:`, error);
         throw error;
@@ -519,11 +519,9 @@ export async function fetchMultipleStocks(
  * @param tickers - Array of stock symbols
  */
 export async function forceRefreshNews(tickers: string[]): Promise<void> {
-    
-    for (const ticker of tickers) {
-        const currentPrice = priceHistory.get(ticker) || 0;
-        await fetchStockNews(ticker, currentPrice, true);
-    }
+    await Promise.all(
+        tickers.map(ticker => fetchStockNews(ticker, priceHistory.get(ticker) || 0, true))
+    );
 }
 
 /**

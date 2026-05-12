@@ -1,17 +1,20 @@
 // GraphQL resolvers - Finnhub prices + Finnhub news
 
-import { fetchStockPrice, fetchMultipleStockPrices, fetchStockNews, fetchStock as fetchFinnhubStock } from '../api/stockApi';
+import { fetchStockPrice, fetchStockNews, fetchStock as fetchFinnhubStock } from '../api/stockApi';
 import type { Stock } from './types';
 
 export const resolvers = {
   Query: {
     /**
      * Get a single stock - Prices + News from Finnhub
+     * Price and news fetches run in parallel.
      */
     stock: async (_: unknown, { ticker }: { ticker: string }): Promise<Stock> => {
       try {
-        const priceData = await fetchStockPrice(ticker);
-        const summaries = await fetchStockNews(ticker, priceData.price, false);
+        const [priceData, summaries] = await Promise.all([
+          fetchStockPrice(ticker),
+          fetchStockNews(ticker, 0, false),
+        ]);
 
         return { ...priceData, summaries };
 
@@ -23,20 +26,22 @@ export const resolvers = {
 
     /**
      * Get multiple stocks - Prices + News from Finnhub
+     * Price fetch and news fetch run in parallel per ticker; all tickers run concurrently.
      */
     stocks: async (_: unknown, { tickers }: { tickers: string[] }): Promise<Stock[]> => {
       try {
-        const priceDataArray = await fetchMultipleStockPrices(tickers);
-
+        // For each ticker: fire price (which itself now parallels profile) and news together.
+        // fetchStockNews with currentPrice=0 will use cache when available; on a cold start
+        // the news fetch overlaps the price fetch instead of waiting on it.
         const results: Stock[] = await Promise.all(
-          priceDataArray.map(async (priceData) => {
-            const summaries = await fetchStockNews(priceData.ticker, priceData.price, false);
+          tickers.map(async (ticker) => {
+            const [priceData, summaries] = await Promise.all([
+              fetchStockPrice(ticker),
+              fetchStockNews(ticker, 0, false),
+            ]);
             return { ...priceData, summaries };
           })
         );
-
-        const totalNews = results.reduce((sum, stock) => sum + stock.summaries.length, 0);
-        console.log(`🔍 DEBUG - GraphQL: Final result - Total news across all stocks: ${totalNews}`);
 
         return results;
 
@@ -76,12 +81,14 @@ export const resolvers = {
 
   Mutation: {
     /**
-     * Force refresh stock data - Prices + News from Finnhub
+     * Force refresh stock data - Prices + News from Finnhub, run in parallel.
      */
     refreshStock: async (_: unknown, { ticker }: { ticker: string }): Promise<Stock> => {
       try {
-        const priceData = await fetchStockPrice(ticker);
-        const summaries = await fetchStockNews(ticker, priceData.price, true);
+        const [priceData, summaries] = await Promise.all([
+          fetchStockPrice(ticker),
+          fetchStockNews(ticker, 0, true),
+        ]);
 
         return { ...priceData, summaries };
 
