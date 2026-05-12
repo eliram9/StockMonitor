@@ -2,14 +2,19 @@
 
 'use client';
 
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, lazy, Suspense } from 'react';
 import { useStocks } from '@/lib/hooks/useStocks';
 import { StockCard } from './StockCard';
 import { BenzingaNews } from './BenzingaNews';
 import { ThemeSwitcher } from './ThemeSwitcher';
-import { MarketHoliday } from './MarketHoliday';
 import { MARKET_CONFIG } from '@/lib/utils/marketConfig';
 import { getTimeUntilMarketOpen } from '@/lib/utils/marketHours';
+
+// Lazy-load MarketHoliday so that nyse-holidays is NOT in the critical JS bundle.
+// The component renders below the fold and is non-essential for initial paint.
+const MarketHoliday = lazy(() =>
+    import('./MarketHoliday').then((m) => ({ default: m.MarketHoliday }))
+);
 
 // Constants for better maintainability
 const DASHBOARD_CONFIG = {
@@ -272,9 +277,11 @@ export function Dashboard() {
             {/* Benzinga News Component */}
             <BenzingaNews stocks={stocks} />
 
-            {/* NYSE Holiday Test Component */}
+            {/* NYSE Holiday Component — loaded lazily to keep nyse-holidays out of the critical bundle */}
             <div className="mb-6">
-                <MarketHoliday />
+                <Suspense fallback={<div className="h-20 bg-gray-50 rounded-lg animate-pulse" />}>
+                    <MarketHoliday />
+                </Suspense>
             </div>
           
             {/* Debug Information (Development Only) */}
